@@ -1,0 +1,152 @@
+{
+    "Scenario": 
+    {
+	    "name": "SpySat"        
+    },
+    "time constraints":
+    {
+        "start time": "10 Jul 2024 12:00:00.000",
+        "stop time": "+2 days",
+        "step": 60
+    },
+    "satellites": 
+    {
+        "Eve": 
+        {
+            "name": "Eve",
+            "propagator_type": 4,
+            "propagator_params":
+            {
+                "scc": "46266",
+                "tle_from_file": true,
+                "tle_file": "E:/Celina/STKControl/TLE/TLE.txt"
+            }
+        },
+        "Saocom1a": 
+        {
+            "name": "SAOCOM1A",
+            "propagator_type": 4,
+            "propagator_params":
+            {
+                "scc": "43641",
+                "tle_from_file": true,
+                "tle_file": "E:/Celina/STKControl/TLE/TLE.txt"
+            }
+        },
+        "Saocom1b": 
+        {
+            "name": "SAOCOM1B",
+            "propagator_type": 4,
+            "propagator_params":
+            {
+                "scc": "46265",
+                "tle_from_file": true,
+                "tle_file": "E:/Celina/STKControl/TLE/TLE.txt"
+            }
+        }
+    },
+    "ground_stations": 
+    {
+        "CBA_Ground": 
+        {
+            "name": "CBAGround",
+            "lat_long_unit": "deg",
+            "use_terrain": false,
+            "lat": -31.4343,
+            "long": -64.2672,
+            "alt": 0
+        },
+        "TF_Ground": 
+        {
+            "name": "TFGround",
+            "lat_long_unit": "deg",
+            "use_terrain": false,
+            "lat": -54.510278,
+            "long": -67.115,
+            "alt": 0
+        }
+    },
+    "antennas": 
+    {
+        "CBA_Antenna":
+        {
+            "name": "antennaCBA",
+            "model": "Bessel Aperture Circular",
+            "diameter": 0.5,
+            "computer_main_lobe_gain": false,
+            "freq": 2.255,
+            "Elv": -65,
+            "antenna_parent": "CBAGround"
+        },
+        "TF_Antenna":
+        {
+            "name": "antennaTF",
+            "model": "Bessel Aperture Circular",
+            "diameter": 0.5,
+            "computer_main_lobe_gain": false,
+            "freq": 2.255,
+            "Elv": -65,
+            "antenna_parent": "TFGround"
+        }
+    },
+    "transmitters": 
+    {
+        "CBA_Transmitter": 
+        {
+            "name": "transmitterCBA",
+            "dem": "8PSK",
+            "model": "Complex Transmitter Model",
+            "auto_scale_bandwidth": true,
+            "freq": 20.2,
+            "power": -14,
+            "data_rate": 2,
+            "antenna_control": 0,
+            "transmitter_parent": "CBAGround"
+        },
+        "TF_Transmitter": 
+        {
+            "name": "transmitterTF",
+            "dem": "8PSK",
+            "model": "Complex Transmitter Model",
+            "auto_scale_bandwidth": true,
+            "freq": 20.2,
+            "power": -14,
+            "data_rate": 2,
+            "antenna_control": 0,
+            "transmitter_parent": "TFGround"
+        }
+    },
+    "receivers": 
+    {
+        "eve_receiver": 
+        {
+            "name": "receiverEVE",
+            "dem": "8PSK",
+            "receiver_type": "Simple Receiver Model",
+            "auto_select_modulator": false,
+            "receiver_parent": "Eve",
+            "link_bool": true,
+            "link_transmitters": ["transmitterCBA", "transmitterTF"]
+        },
+        "saocom1a_receiver": 
+        {
+            "name": "receiverSC1A",
+            "dem": "8PSK",
+            "receiver_type": "Simple Receiver Model",
+            "auto_select_modulator": false,
+            "receiver_parent": "SAOCOM1A",
+            "link_bool": true,
+            "link_transmitters": ["transmitterCBA", "transmitterTF"]
+        },
+        "saocom1b_receiver": 
+        {
+            "name": "receiverSC1B",
+            "dem": "8PSK",
+            "receiver_type": "Simple Receiver Model",
+            "auto_select_modulator": false,
+            "receiver_parent": "SAOCOM1B",
+            "link_bool": true,
+            "link_transmitters": ["transmitterCBA", "transmitterTF"]
+        }
+    }
+}
