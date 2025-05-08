@@ -244,7 +244,7 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
             }
     
     reporte = pd.DataFrame(tabla)
-    reporte.to_excel(TableName+".xlsx")
+    reporte.to_excel("Reports/" + TableName+".xlsx")
             
 Access = {}    
 
