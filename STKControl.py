@@ -223,24 +223,31 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
     accessStopTime  = access_data_results.DataSets.GetDataSetByName('Stop Time').GetValues()
     LinkInfo = link.DataProviders.Item("Link Information")
     LinkInfo_TimeVar        = LinkInfo.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    rptElements       = ['C/No', 'Eb/No', "BER"]
+    rptElements       = ['C/No', 'Eb/No', "BER", "Range", "Xmtr Elevation"]
     accessCNo               = []
     accessEbNo              = []
     accessBER               = []
+    accessRange             = []
+    accessXmtrElevation     = []
     for i in range(len(accessStartTime)):
         LinkInfo_results = LinkInfo_TimeVar.ExecElements( accessStartTime[i], accessStopTime[i], Step, rptElements)
         CNo = list(LinkInfo_results.DataSets.GetDataSetByName('C/No').GetValues())
         EbNo = list(LinkInfo_results.DataSets.GetDataSetByName('Eb/No').GetValues())
         BER = list(LinkInfo_results.DataSets.GetDataSetByName('BER').GetValues())
+        Range = list(LinkInfo_results.DataSets.GetDataSetByName('Range').GetValues())
+        XmtrElevation = list(LinkInfo_results.DataSets.GetDataSetByName('Xmtr Elevation').GetValues())
         for j in range(len(CNo)):
             accessCNo.append(CNo[j])
             accessEbNo.append(EbNo[j])
             accessBER.append(BER[j])
-        
+            accessRange.append(Range[j])
+            accessXmtrElevation.append(XmtrElevation[j])
     tabla = {
             "C_No": accessCNo,
             "EB_NO": accessEbNo,
-            "BER": accessBER
+            "BER": accessBER,
+            "Range": accessRange,
+            "Xmtr Elevation": accessXmtrElevation 
             }
     
     reporte = pd.DataFrame(tabla)
