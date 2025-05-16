@@ -157,7 +157,15 @@ def SetAntenna(stk_obj, obj_type, name, model, diameter, computer_main_lobe_gain
     antennaOrientation.AssignAzEl(0, Elv, 1)
     return antenna
 
-
+def SetSensor(stk_obj, obj_type, name, target_name):
+    sensor = stk_obj.Children.New(obj_type, name)
+    sensor_QI = sensor.QueryInterface(STKObjects.IAgSensor)
+    targeted_sensor = sensor_QI.CommonTasks.SetPointingTargetedTracking(0x2, 0x1, "E:/Celina/STKControl/AreaTarget1")
+    targeted_sensor_QI = targeted_sensor.QueryInterface(STKObjects.IAgSnPtTargeted)
+    targets = targeted_sensor_QI.Targets
+    targets_QI = targets.QueryInterface(STKObjects.IAgSnTargetCollection)
+    for tg in range(len(target_name)):
+        targets_QI.Add(target_name[tg])
         
 # Get the entity parameters from the scenario file and initialize the entities.
 Satellites = {}
@@ -210,6 +218,12 @@ for rs in scenario_metadata['receivers']:
                                                                         scenario_metadata["receivers"][rs]["receiver_type"], 
                                                                         scenario_metadata["receivers"][rs]["auto_select_modulator"], scenario_metadata["receivers"][rs]["dem"])
 
+Sensors = {}
+ss_idx = 0
+for ss in scenario_metadata['sensors']:
+    ss_idx += 1
+    #Sensors[scenario_metadata["sensors"][ss]["name"]] = SetSensor(Satellites[scenario_metadata["sensors"][ss]["sensor_parent"]], 20, scenario_metadata["sensors"][ss]["name"],
+    #                                                              scenario_metadata["sensors"][ss]["sensor_targets"])
 
 ######################################
 ##    Task 4
@@ -221,37 +235,91 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
     access_data_results = access_data_query.Exec(StartTime, StopTime)
     accessStartTime = access_data_results.DataSets.GetDataSetByName('Start Time').GetValues()
     accessStopTime  = access_data_results.DataSets.GetDataSetByName('Stop Time').GetValues()
+    
+    AER_data = link.DataProviders.Item("AER Data")
+    AER_data_query = AER_data.QueryInterface(STKObjects.IAgDataProviderGroup)
+    AERdata_DataObj         = AER_data_query.Group
+    AERdata_Default         = AERdata_DataObj.Item('Default')
+    AERdata_TimeVar         = AERdata_Default.QueryInterface(STKObjects.IAgDataPrvTimeVar)
+    AERrptElements    = ["Access Number"]
+    
     LinkInfo = link.DataProviders.Item("Link Information")
     LinkInfo_TimeVar        = LinkInfo.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    rptElements       = ['C/No', 'Eb/No', "BER", "Range", "Xmtr Elevation"]
+    rptElements       = ['C/No', 'Eb/No', "BER", "Range", "Xmtr Elevation", "Xmtr Azimuth"]
+    
+    PositionVelocityInfo = link.DataProviders.Item("To Position Velocity")
+    PositionVelocityInfo_TimeVar = PositionVelocityInfo.QueryInterface(STKObjects.IAgDataProviderGroup)
+    ToPositionVel_DataObj   = PositionVelocityInfo_TimeVar.Group
+    ToPositionVel_ICRF      = ToPositionVel_DataObj.Item('ICRF')
+    ToPositionVel_TimeVar   = ToPositionVel_ICRF.QueryInterface(STKObjects.IAgDataPrvTimeVar)
+    PVrptElements     = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
+    
+    accessNumber            = []
     accessCNo               = []
     accessEbNo              = []
     accessBER               = []
     accessRange             = []
     accessXmtrElevation     = []
+    accessXmtrAzimuth       = []
+    accessx                 = []
+    accessy                 = []
+    accessz                 = []
+    accessVx                = []
+    accessVy                = []
+    accessVz                = []
+    accessRelSpeed          = []
     for i in range(len(accessStartTime)):
         LinkInfo_results = LinkInfo_TimeVar.ExecElements( accessStartTime[i], accessStopTime[i], Step, rptElements)
+        PositionVelocityInfo_results = ToPositionVel_TimeVar.ExecElements(accessStartTime[i], accessStopTime[i], Step, PVrptElements)
+        AER_data_results = AERdata_TimeVar.ExecElements(accessStartTime[i], accessStopTime[i], Step, AERrptElements)
+        AccessNumber = AER_data_results.DataSets.GetDataSetByName('Access Number')
         CNo = list(LinkInfo_results.DataSets.GetDataSetByName('C/No').GetValues())
         EbNo = list(LinkInfo_results.DataSets.GetDataSetByName('Eb/No').GetValues())
         BER = list(LinkInfo_results.DataSets.GetDataSetByName('BER').GetValues())
         Range = list(LinkInfo_results.DataSets.GetDataSetByName('Range').GetValues())
         XmtrElevation = list(LinkInfo_results.DataSets.GetDataSetByName('Xmtr Elevation').GetValues())
+        XmtrAzimuth = list(LinkInfo_results.DataSets.GetDataSetByName('Xmtr Azimuth').GetValues())
+        x = list(PositionVelocityInfo_results.DataSets.GetDataSetByName('x').GetValues())
+        y = list(PositionVelocityInfo_results.DataSets.GetDataSetByName('y').GetValues())
+        z = list(PositionVelocityInfo_results.DataSets.GetDataSetByName('z').GetValues())
+        Vx = list(PositionVelocityInfo_results.DataSets.GetDataSetByName('xVel').GetValues())
+        Vy = list(PositionVelocityInfo_results.DataSets.GetDataSetByName('yVel').GetValues())
+        Vz = list(PositionVelocityInfo_results.DataSets.GetDataSetByName('zVel').GetValues())
+        RelSpeed = list(PositionVelocityInfo_results.DataSets.GetDataSetByName('RelSpeed').GetValues())
         for j in range(len(CNo)):
             accessCNo.append(CNo[j])
             accessEbNo.append(EbNo[j])
             accessBER.append(BER[j])
             accessRange.append(Range[j])
             accessXmtrElevation.append(XmtrElevation[j])
+            accessXmtrAzimuth.append(XmtrAzimuth)
+            accessx.append(x[j])
+            accessy.append(y[j])
+            accessz.append(z[j])
+            accessVx.append(Vx[j])
+            accessVy.append(Vy[j])
+            accessVz.append(Vz[j])
+            accessRelSpeed.append(RelSpeed[j])
+            accessNumber.append(AccessNumber)
     tabla = {
+            "Acces Number": accessNumber,
             "C_No": accessCNo,
             "EB_NO": accessEbNo,
             "BER": accessBER,
             "Range": accessRange,
-            "Xmtr Elevation": accessXmtrElevation 
+            "Xmtr Elevation": accessXmtrElevation,
+            "Xmtr Azimuth": accessXmtrAzimuth,
+            "X": accessx,
+            "y": accessy,
+            "z": accessz,
+            "Vx": accessVx,
+            "Vy": accessVy,
+            "Vz": accessVz,
+            "RelSpeed": accessRelSpeed 
             }
     
     reporte = pd.DataFrame(tabla)
-    reporte.to_excel("Reports/" + TableName+".xlsx")
+    reporte.to_csv("Reports/" + TableName+".csv")
             
 Access = {}    
 
@@ -260,10 +328,10 @@ for rec in scenario_metadata["receivers"]:
         for ts in range(len(scenario_metadata["receivers"][rec]["link_transmitters"])):
             acces_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_acces_" + scenario_metadata["receivers"][rec]["link_transmitters"][ts]
             report_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_" + scenario_metadata["receivers"][rec]["link_transmitters"][ts]
-            Access[acces_name] = Receivers[scenario_metadata["receivers"][rs]["name"]].GetAccessToObject(Transmitters[scenario_metadata["receivers"][rec]["link_transmitters"][ts]])
+            Access[acces_name] = Transmitters[scenario_metadata["receivers"][rec]["link_transmitters"][ts]].GetAccessToObject(Receivers[scenario_metadata["receivers"][rec]["name"]])
             Access[acces_name].ComputeAccess()
             commLinkInfoTable(link=Access[acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, Step=StepTime, TableName=report_name)
         
-
+            
 
 

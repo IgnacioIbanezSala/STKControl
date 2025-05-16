@@ -148,5 +148,14 @@
             "link_bool": true,
             "link_transmitters": ["transmitterCBA", "transmitterTF"]
         }
+    },
+    "sensors":
+    {
+        "eve_sensor":
+        {
+            "name": "EveSensor",
+            "sensor_parent": "Eve",
+            "sensor_targets": ["CBAGround", "TFGround"]
+        }
     }
 }
