@@ -230,7 +230,7 @@ for ss in scenario_metadata['sensors']:
 ##    2. Retrive and view the altitud of the satellite during an access interval.
 
 def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
-    access_data = link.DataProviders.Item("Access Data")
+    access_data = link.DataProviders.Item('Access Data')
     access_data_query  = access_data.QueryInterface(STKObjects.IAgDataPrvInterval)
     access_data_results = access_data_query.Exec(StartTime, StopTime)
     accessStartTime = access_data_results.DataSets.GetDataSetByName('Start Time').GetValues()
@@ -238,8 +238,8 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
     
     AER_data = link.DataProviders.Item("AER Data")
     AER_data_query = AER_data.QueryInterface(STKObjects.IAgDataProviderGroup)
-    AERdata_DataObj         = AER_data_query.Group
-    AERdata_Default         = AERdata_DataObj.Item('Default')
+    AERdata_Group           = AER_data_query.Group
+    AERdata_Default         = AERdata_Group.Item('Default')
     AERdata_TimeVar         = AERdata_Default.QueryInterface(STKObjects.IAgDataPrvTimeVar)
     AERrptElements    = ["Access Number"]
     
@@ -249,8 +249,8 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
     
     PositionVelocityInfo = link.DataProviders.Item("To Position Velocity")
     PositionVelocityInfo_TimeVar = PositionVelocityInfo.QueryInterface(STKObjects.IAgDataProviderGroup)
-    ToPositionVel_DataObj   = PositionVelocityInfo_TimeVar.Group
-    ToPositionVel_ICRF      = ToPositionVel_DataObj.Item('ICRF')
+    ToPositionVel_Group   = PositionVelocityInfo_TimeVar.Group
+    ToPositionVel_ICRF      = ToPositionVel_Group.Item('ICRF')
     ToPositionVel_TimeVar   = ToPositionVel_ICRF.QueryInterface(STKObjects.IAgDataPrvTimeVar)
     PVrptElements     = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
     
@@ -300,7 +300,7 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
             accessVy.append(Vy[j])
             accessVz.append(Vz[j])
             accessRelSpeed.append(RelSpeed[j])
-            accessNumber.append(AccessNumber)
+            accessNumber.append(i)
     tabla = {
             "Acces Number": accessNumber,
             "C_No": accessCNo,
@@ -317,8 +317,8 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
             "Vz": accessVz,
             "RelSpeed": accessRelSpeed 
             }
-    
     reporte = pd.DataFrame(tabla)
+    reporte.to_excel("Reports/" + TableName+".xlsx")
     reporte.to_csv("Reports/" + TableName+".csv")
             
 Access = {}    
@@ -328,7 +328,7 @@ for rec in scenario_metadata["receivers"]:
         for ts in range(len(scenario_metadata["receivers"][rec]["link_transmitters"])):
             acces_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_acces_" + scenario_metadata["receivers"][rec]["link_transmitters"][ts]
             report_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_" + scenario_metadata["receivers"][rec]["link_transmitters"][ts]
-            Access[acces_name] = Transmitters[scenario_metadata["receivers"][rec]["link_transmitters"][ts]].GetAccessToObject(Receivers[scenario_metadata["receivers"][rec]["name"]])
+            Access[acces_name] = Receivers[scenario_metadata["receivers"][rec]["name"]].GetAccessToObject(Transmitters[scenario_metadata["receivers"][rec]["link_transmitters"][ts]])
             Access[acces_name].ComputeAccess()
             commLinkInfoTable(link=Access[acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, Step=StepTime, TableName=report_name)
         
