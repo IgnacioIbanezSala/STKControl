@@ -245,7 +245,7 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
     
     LinkInfo = link.DataProviders.Item("Link Information")
     LinkInfo_TimeVar        = LinkInfo.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    rptElements       = ['C/No', 'Eb/No', "BER", "Range", "Xmtr Elevation", "Xmtr Azimuth"]
+    rptElements       = ["Time", 'C/No', 'Eb/No', "BER", "Range", "Xmtr Elevation", "Xmtr Azimuth"]
     
     PositionVelocityInfo = link.DataProviders.Item("To Position Velocity")
     PositionVelocityInfo_TimeVar = PositionVelocityInfo.QueryInterface(STKObjects.IAgDataProviderGroup)
@@ -255,6 +255,7 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
     PVrptElements     = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
     
     accessNumber            = []
+    accessTime              = []
     accessCNo               = []
     accessEbNo              = []
     accessBER               = []
@@ -273,6 +274,7 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
         PositionVelocityInfo_results = ToPositionVel_TimeVar.ExecElements(accessStartTime[i], accessStopTime[i], Step, PVrptElements)
         AER_data_results = AERdata_TimeVar.ExecElements(accessStartTime[i], accessStopTime[i], Step, AERrptElements)
         AccessNumber = AER_data_results.DataSets.GetDataSetByName('Access Number')
+        Time = list(LinkInfo_results.DataSets.GetDataSetByName('Time').GetValues())
         CNo = list(LinkInfo_results.DataSets.GetDataSetByName('C/No').GetValues())
         EbNo = list(LinkInfo_results.DataSets.GetDataSetByName('Eb/No').GetValues())
         BER = list(LinkInfo_results.DataSets.GetDataSetByName('BER').GetValues())
@@ -287,6 +289,7 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
         Vz = list(PositionVelocityInfo_results.DataSets.GetDataSetByName('zVel').GetValues())
         RelSpeed = list(PositionVelocityInfo_results.DataSets.GetDataSetByName('RelSpeed').GetValues())
         for j in range(len(CNo)):
+            accessTime.append(Time[j])
             accessCNo.append(CNo[j])
             accessEbNo.append(EbNo[j])
             accessBER.append(BER[j])
@@ -303,6 +306,7 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
             accessNumber.append(i)
     tabla = {
             "Acces Number": accessNumber,
+            "Time": accessTime,
             "C_No": accessCNo,
             "EB_NO": accessEbNo,
             "BER": accessBER,
