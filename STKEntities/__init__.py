@@ -1,0 +1,5 @@
+from STKEntities.Satellites import Stk_Satellite
+from STKEntities.GroundStations import STKGroundStation
+from STKEntities.Transmitter import STKTransmitter
+from STKEntities.Receptors import STKReceptor
+from STKEntities.Antenna import STKAntenna
