@@ -10,7 +10,7 @@ from win32api import GetSystemMetrics
 from comtypes.client import CreateObject
 import pandas as pd
 import json
-import STKEntities
+
 
 ##    2. Get reference to running STK instance
 uiApplication = CreateObject('STK11.Application')
@@ -26,6 +26,7 @@ root = uiApplication.Personality2
 
 from comtypes.gen import STKObjects
 from comtypes.gen import STKUtil
+import STKEntities
 
 
 path_to_tle = "TLE/"
@@ -153,7 +154,8 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
     AERdata_Group           = AER_data_query.Group
     AERdata_Default         = AERdata_Group.Item('Default')
     AERdata_TimeVar         = AERdata_Default.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    AERrptElements    = ["Access Number", "Azymuth", "Elevation", "Range"]
+    #, "Azymuth", "Elevation", "Range"
+    AERrptElements    = ["Access Number", "Azimuth", "Elevation", "Range"]
     
     LinkInfo = link.DataProviders.Item("Link Information")
     LinkInfo_TimeVar        = LinkInfo.QueryInterface(STKObjects.IAgDataPrvTimeVar)
@@ -167,6 +169,9 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
     PVrptElements     = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
     
     accessNumber            = []
+    accessAzimuth           = []
+    accessElevation         = []
+    accessRangeAER          = []
     accessTime              = []
     accessCNo               = []
     accessEbNo              = []
@@ -185,7 +190,11 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
         LinkInfo_results = LinkInfo_TimeVar.ExecElements( accessStartTime[i], accessStopTime[i], Step, rptElements)
         PositionVelocityInfo_results = ToPositionVel_TimeVar.ExecElements(accessStartTime[i], accessStopTime[i], Step, PVrptElements)
         AER_data_results = AERdata_TimeVar.ExecElements(accessStartTime[i], accessStopTime[i], Step, AERrptElements)
-        AccessNumber = AER_data_results.DataSets.GetDataSetByName('Access Number')
+        AccessNumber = AER_data_results.DataSets.GetDataSetByName('Access Number').GetValues()
+        Azimuth = list(AER_data_results.DataSets.GetDataSetByName('Azimuth').GetValues())
+        
+        Elevation = list(AER_data_results.DataSets.GetDataSetByName('Elevation').GetValues())
+        RangeAER = list(AER_data_results.DataSets.GetDataSetByName('Range').GetValues())
         Time = list(LinkInfo_results.DataSets.GetDataSetByName('Time').GetValues())
         CNo = list(LinkInfo_results.DataSets.GetDataSetByName('C/No').GetValues())
         EbNo = list(LinkInfo_results.DataSets.GetDataSetByName('Eb/No').GetValues())
@@ -201,6 +210,9 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
         Vz = list(PositionVelocityInfo_results.DataSets.GetDataSetByName('zVel').GetValues())
         RelSpeed = list(PositionVelocityInfo_results.DataSets.GetDataSetByName('RelSpeed').GetValues())
         for j in range(len(CNo)):
+            accessAzimuth.append(Azimuth[j])
+            accessElevation.append(Elevation[j])
+            accessRangeAER.append(RangeAER[j])
             accessTime.append(Time[j])
             accessCNo.append(CNo[j])
             accessEbNo.append(EbNo[j])
@@ -222,6 +234,9 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
             "C_No": accessCNo,
             "EB_NO": accessEbNo,
             "BER": accessBER,
+            "Azimuth": accessAzimuth,
+            "Elevation": accessElevation,
+            "Range AER": accessRangeAER,
             "Range": accessRange,
             "Xmtr Elevation": accessXmtrElevation,
             "Xmtr Azimuth": accessXmtrAzimuth,
@@ -244,7 +259,8 @@ for rec in scenario_metadata["receivers"]:
         for ts in range(len(scenario_metadata["receivers"][rec]["link_transmitters"])):
             acces_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_acces_" + scenario_metadata["receivers"][rec]["link_transmitters"][ts]
             report_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_" + scenario_metadata["receivers"][rec]["link_transmitters"][ts]
-            Access[acces_name] = Receivers[scenario_metadata["receivers"][rec]["name"]].receptor.GetAccessToObject(Transmitters[scenario_metadata["receivers"][rec]["link_transmitters"][ts]].transmitter)
+            
+            Access[acces_name] = Transmitters[scenario_metadata["receivers"][rec]["link_transmitters"][ts]].transmitter.GetAccessToObject(Receivers[scenario_metadata["receivers"][rec]["name"]].receptor)
             Access[acces_name].ComputeAccess()
             commLinkInfoTable(link=Access[acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, Step=StepTime, TableName=report_name)
         
