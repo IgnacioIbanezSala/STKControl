@@ -153,7 +153,7 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
     AERdata_Group           = AER_data_query.Group
     AERdata_Default         = AERdata_Group.Item('Default')
     AERdata_TimeVar         = AERdata_Default.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    AERrptElements    = ["Access Number"]
+    AERrptElements    = ["Access Number", "Azymuth", "Elevation", "Range"]
     
     LinkInfo = link.DataProviders.Item("Link Information")
     LinkInfo_TimeVar        = LinkInfo.QueryInterface(STKObjects.IAgDataPrvTimeVar)

@@ -49,6 +49,11 @@ class Short_Packed_Channel():
     SNR = Pa * Ga * Gi * Li * (abs(h_t) ** 2) / (1**2)
     return SNR
   
+  def gen_SNR_STKvalues(self, stk_cn, h_t):
+    cn = np.power(10, stk_cn/10)
+    SNR = cn * (abs(h_t) ** 2) / (1**2)
+    return SNR
+  
 
 
 

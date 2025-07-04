@@ -72,20 +72,20 @@
         {
             "name": "antennaCBA",
             "model": "Bessel Aperture Circular",
-            "diameter": 0.5,
+            "diameter": 13,
             "computer_main_lobe_gain": false,
             "freq": 2.255,
-            "Elv": -65,
+            "Elv": 90,
             "antenna_parent": "CBAGround"
         },
         "TF_Antenna":
         {
             "name": "antennaTF",
             "model": "Bessel Aperture Circular",
-            "diameter": 0.5,
+            "diameter": 13,
             "computer_main_lobe_gain": false,
             "freq": 2.255,
-            "Elv": -65,
+            "Elv": 90,
             "antenna_parent": "TFGround"
         }
     },
@@ -98,7 +98,7 @@
             "model": "Complex Transmitter Model",
             "auto_scale_bandwidth": true,
             "freq": 20.2,
-            "power": -14,
+            "power": 30,
             "data_rate": 2,
             "antenna_control": 0,
             "transmitter_parent": "CBAGround"
@@ -110,7 +110,7 @@
             "model": "Complex Transmitter Model",
             "auto_scale_bandwidth": true,
             "freq": 20.2,
-            "power": -14,
+            "power": 30,
             "data_rate": 2,
             "antenna_control": 0,
             "transmitter_parent": "TFGround"
