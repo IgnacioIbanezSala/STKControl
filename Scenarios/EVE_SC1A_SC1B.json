@@ -71,7 +71,7 @@
         "CBA_Antenna":
         {
             "name": "antennaCBA",
-            "model": "Bessel Aperture Circular",
+            "model": "Parabolic",
             "diameter": 13,
             "computer_main_lobe_gain": false,
             "freq": 2.255,
@@ -81,7 +81,7 @@
         "TF_Antenna":
         {
             "name": "antennaTF",
-            "model": "Bessel Aperture Circular",
+            "model": "Parabolic",
             "diameter": 13,
             "computer_main_lobe_gain": false,
             "freq": 2.255,

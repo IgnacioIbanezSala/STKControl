@@ -10,7 +10,7 @@ from win32api import GetSystemMetrics
 from comtypes.client import CreateObject
 import pandas as pd
 import json
-
+import os
 
 ##    2. Get reference to running STK instance
 uiApplication = CreateObject('STK11.Application')
@@ -44,6 +44,8 @@ StepTime      = scenario_metadata["time constraints"]["step"]
 
 root.NewScenario(ScenarioName)
 scenario      = root.CurrentScenario
+cwd = os.getcwd()
+print("Path" + cwd)
 
 ##    2. Set the analytical time period.
 
@@ -61,7 +63,10 @@ root.Rewind()
 def SetSensor(stk_obj, obj_type, name, target_name):
     sensor = stk_obj.Children.New(obj_type, name)
     sensor_QI = sensor.QueryInterface(STKObjects.IAgSensor)
-    targeted_sensor = sensor_QI.CommonTasks.SetPointingTargetedTracking(0x2, 0x1, "E:/Celina/STKControl/AreaTarget1")
+    cwd = os.getcwd()
+    path = cwd + "\SpySat\Satellite\SAOCOM1A"
+    print(path)
+    targeted_sensor = sensor_QI.CommonTasks.SetPointingTargetedTracking(0x2, 0x1, path)
     targeted_sensor_QI = targeted_sensor.QueryInterface(STKObjects.IAgSnPtTargeted)
     targets = targeted_sensor_QI.Targets
     targets_QI = targets.QueryInterface(STKObjects.IAgSnTargetCollection)
@@ -131,12 +136,16 @@ for rs in scenario_metadata['receivers']:
     dem = scenario_metadata["receivers"][rs]["dem"]
     Receivers[rs_name] = STKEntities.STKReceptor(rs_name, Satellites[parent_name].sat, model, auto_select_modulator, dem)
 
+print(root.AllInstanceNamesToXML)
+
+
 Sensors = {}
 ss_idx = 0
 for ss in scenario_metadata['sensors']:
     ss_idx += 1
-    #Sensors[scenario_metadata["sensors"][ss]["name"]] = SetSensor(Satellites[scenario_metadata["sensors"][ss]["sensor_parent"]], 20, scenario_metadata["sensors"][ss]["name"],
-    #                                                              scenario_metadata["sensors"][ss]["sensor_targets"])
+    Sensors[scenario_metadata["sensors"][ss]["name"]] = SetSensor(Satellites[scenario_metadata["sensors"][ss]["sensor_parent"]].sat, 20, scenario_metadata["sensors"][ss]["name"],
+                                                                 scenario_metadata["sensors"][ss]["sensor_targets"])
+
 
 ######################################
 ##    Task 4
@@ -190,7 +199,7 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
         LinkInfo_results = LinkInfo_TimeVar.ExecElements( accessStartTime[i], accessStopTime[i], Step, rptElements)
         PositionVelocityInfo_results = ToPositionVel_TimeVar.ExecElements(accessStartTime[i], accessStopTime[i], Step, PVrptElements)
         AER_data_results = AERdata_TimeVar.ExecElements(accessStartTime[i], accessStopTime[i], Step, AERrptElements)
-        AccessNumber = AER_data_results.DataSets.GetDataSetByName('Access Number').GetValues()
+        AccessNumber = list(AER_data_results.DataSets.GetDataSetByName('Access Number').GetValues())
         Azimuth = list(AER_data_results.DataSets.GetDataSetByName('Azimuth').GetValues())
         
         Elevation = list(AER_data_results.DataSets.GetDataSetByName('Elevation').GetValues())
@@ -227,7 +236,7 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
             accessVy.append(Vy[j])
             accessVz.append(Vz[j])
             accessRelSpeed.append(RelSpeed[j])
-            accessNumber.append(i)
+            accessNumber.append(AccessNumber[j])
     tabla = {
             "Acces Number": accessNumber,
             "Time": accessTime,
