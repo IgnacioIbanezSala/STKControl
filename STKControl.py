@@ -55,23 +55,6 @@ scenario2.Animation.AnimStepValue = StepTime
 
 ##    3. Reset the animation time.
 root.Rewind()
-
-######################################
-##    Task 3
-##    Define functions to set stk objects  
-
-def SetSensor(stk_obj, obj_type, name, target_name):
-    sensor = stk_obj.Children.New(obj_type, name)
-    sensor_QI = sensor.QueryInterface(STKObjects.IAgSensor)
-    cwd = os.getcwd()
-    path = cwd + "\SpySat\Satellite\SAOCOM1A"
-    print(path)
-    targeted_sensor = sensor_QI.CommonTasks.SetPointingTargetedTracking(0x2, 0x1, path)
-    targeted_sensor_QI = targeted_sensor.QueryInterface(STKObjects.IAgSnPtTargeted)
-    targets = targeted_sensor_QI.Targets
-    targets_QI = targets.QueryInterface(STKObjects.IAgSnTargetCollection)
-    for tg in range(len(target_name)):
-        targets_QI.Add(target_name[tg])
         
 # Get the entity parameters from the scenario file and initialize the entities.
 Satellites = {}
@@ -83,7 +66,6 @@ for sat in scenario_metadata['satellites']:
     tle_file_path = scenario_metadata["satellites"][sat]["propagator_params"]["tle_file"]
     Satellites[sat_name] = STKEntities.Stk_Satellite(root, sat_name)
     Satellites[sat_name].SetSatellitePropagator_and_BasicAttitude(root, sat_scc, True, tle_file_path, True)
-
 
 GroundStations = {}
 gs_idx = 0
@@ -136,16 +118,17 @@ for rs in scenario_metadata['receivers']:
     dem = scenario_metadata["receivers"][rs]["dem"]
     Receivers[rs_name] = STKEntities.STKReceptor(rs_name, Satellites[parent_name].sat, model, auto_select_modulator, dem)
 
-print(root.AllInstanceNamesToXML)
-
-
 Sensors = {}
 ss_idx = 0
 for ss in scenario_metadata['sensors']:
     ss_idx += 1
-    Sensors[scenario_metadata["sensors"][ss]["name"]] = SetSensor(Satellites[scenario_metadata["sensors"][ss]["sensor_parent"]].sat, 20, scenario_metadata["sensors"][ss]["name"],
-                                                                 scenario_metadata["sensors"][ss]["sensor_targets"])
-
+    ss_name = scenario_metadata["sensors"][ss]["name"]
+    ss_parent = scenario_metadata["sensors"][ss]["sensor_parent"]
+    targets = scenario_metadata["sensors"][ss]["sensor_targets"]
+    Sensors[ss_name] = STKEntities.STKTargetedSensor(ss_name, GroundStations[ss_parent].groundStation, Satellites[targets[0]].sat.Path)
+    for i in range(1, len(targets)):
+        Sensors[ss_name].add_target(Satellites[targets[i]].sat.Path)
+    
 
 ######################################
 ##    Task 4
@@ -201,7 +184,6 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
         AER_data_results = AERdata_TimeVar.ExecElements(accessStartTime[i], accessStopTime[i], Step, AERrptElements)
         AccessNumber = list(AER_data_results.DataSets.GetDataSetByName('Access Number').GetValues())
         Azimuth = list(AER_data_results.DataSets.GetDataSetByName('Azimuth').GetValues())
-        
         Elevation = list(AER_data_results.DataSets.GetDataSetByName('Elevation').GetValues())
         RangeAER = list(AER_data_results.DataSets.GetDataSetByName('Range').GetValues())
         Time = list(LinkInfo_results.DataSets.GetDataSetByName('Time').GetValues())

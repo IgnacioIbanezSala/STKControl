@@ -3,3 +3,4 @@ from STKEntities.GroundStations import STKGroundStation
 from STKEntities.Transmitter import STKTransmitter
 from STKEntities.Receptors import STKReceptor
 from STKEntities.Antenna import STKAntenna
+from STKEntities.TargetedSensor import STKTargetedSensor

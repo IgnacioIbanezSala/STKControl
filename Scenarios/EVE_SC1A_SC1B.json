@@ -151,11 +151,17 @@
     },
     "sensors":
     {
-        "eve_sensor":
+        "cba_sensor":
         {
-            "name": "EveSensor",
-            "sensor_parent": "Eve",
-            "sensor_targets": ["CBAGround", "TFGround"]
+            "name": "CBASensor",
+            "sensor_parent": "CBAGround",
+            "sensor_targets": ["Eve", "SAOCOM1A", "SAOCOM1B"]
+        },
+        "tf_sensor":
+        {
+            "name": "TFSensor",
+            "sensor_parent": "TFGround",
+            "sensor_targets": ["Eve", "SAOCOM1A", "SAOCOM1B"]
         }
     }
 }
