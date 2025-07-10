@@ -44,8 +44,6 @@ StepTime      = scenario_metadata["time constraints"]["step"]
 
 root.NewScenario(ScenarioName)
 scenario      = root.CurrentScenario
-cwd = os.getcwd()
-print("Path" + cwd)
 
 ##    2. Set the analytical time period.
 
@@ -127,11 +125,11 @@ for ss in scenario_metadata['sensors']:
     targets = scenario_metadata["sensors"][ss]["sensor_targets"]
     Sensors[ss_name] = STKEntities.STKTargetedSensor(ss_name, GroundStations[ss_parent].groundStation, Satellites[targets[0]].sat.Path)
     for i in range(1, len(targets)):
-        Sensors[ss_name].add_target(Satellites[targets[i]].sat.Path)
+        Sensors[ss_name].add_target(Satellites[targets[i]].sat)
     
 
 ######################################
-##    Task 4
+##    Task 3
 ##    2. Retrive and view the altitud of the satellite during an access interval.
 
 def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):

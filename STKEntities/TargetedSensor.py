@@ -11,6 +11,6 @@ class STKTargetedSensor():
 
     def add_target(self, target_path):
         targets_QI = self.targets.QueryInterface(STKObjects.IAgSnTargetCollection)
-        targets_QI.Add(target_path)
+        targets_QI.AddObject(target_path)
         
     

@@ -115,26 +115,35 @@ delta = 10e-3
 #Channel blocklenght
 n = 500
 
-Rs = []
+Rs_sc1a = []
+Rs_sc1b = []
 times = []
 #idx_eve = []
-for i in range(num_samples):
+
+def rs(df_bob, df_eve, h_t_bob, h_t_eve):
+    Rs = []
+    span = min(len(df_eve["Range"]), len(df_sc1a["Range"]))
+    for i in range(span):
     
-    idx_eve = df_sc1a.index[df_sc1a["Time"] == df_eve.at[i, "Time"]]
-    if idx_eve.empty:
-        #Rs.append(0)
-        pass
-    else:
-        l_bob = wl / (4*np.pi*df_sc1a.loc[idx_eve]["Range"])
-        l_eve = wl / (4*np.pi*df_eve.loc[idx_eve]["Range"])
-        snr_b = bob_channel.gen_SNR_STKvalues(df_sc1a.loc[idx_eve]["C_No"], h_t_bob[i])
-        snr_e = eve_channel.gen_SNR_STKvalues(df_eve.loc[idx_eve]["C_No"], h_t_eve[i])
-        Rs_inst = sr.achievable_secrecy_rate(snr_b, snr_e, eb, delta, n)[1]
-        Rs.append(Rs_inst)
-        times.append(df_eve.loc[i]["Time"])
+        idx_eve = df_bob.index[df_bob["Time"] == df_eve.at[i, "Time"]]
+        if idx_eve.empty:
+            #Rs.append(0)
+            pass
+        else:
+            l_bob = wl / (4*np.pi*df_bob.loc[idx_eve]["Range"])
+            l_eve = wl / (4*np.pi*df_eve.loc[idx_eve]["Range"])
+            snr_b = bob_channel.gen_SNR_STKvalues(df_bob.loc[idx_eve]["C_No"], h_t_bob[i])
+            snr_e = eve_channel.gen_SNR_STKvalues(df_eve.loc[idx_eve]["C_No"], h_t_eve[i])
+            Rs_inst = sr.achievable_secrecy_rate(snr_b, snr_e, eb, delta, n)[1]
+            Rs.append(Rs_inst)
+            times.append(df_eve.loc[i]["Time"])
+
+    return Rs, times
+
+Rs_sc1a, times = rs(df_sc1a, df_eve, h_t_bob, h_t_eve)
 
 rs_axes = plt.subplots(1,1, figsize = (10,10))[1]
-rs_axes.plot(times, Rs, lw=2, marker='.', color="blue", label='Rs')
+rs_axes.plot(times, Rs_sc1a, lw=2, marker='.', color="blue", label='Rs SAOCOM1A')
 rs_axes.tick_params(axis='x', labelrotation=70, labelsize = 4)
 plt.legend()
 plt.show()
