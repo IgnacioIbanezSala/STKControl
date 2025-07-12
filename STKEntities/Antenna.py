@@ -10,6 +10,8 @@ class STKAntenna():
         antennaModel_QI.Diameter = diameter
         antennaModel_QI.ComputerMainlobeGain = computer_main_lobe_gain
         antennaModel_QI.DesignFrequency = freq
-        antennaOrientation = antenna_QI.Orientation
-        antennaOrientation.AssignAzEl(0, Elv, 1)
+        self.antennaOrientation = antenna_QI.Orientation
+        self.antennaOrientation.AssignAzEl(0, Elv, 1)
         
+    def set_azelorientation(self, az, elv, boresight_rotate):
+        self.antennaOrientation.AssignAzEl(az, elv, boresight_rotate)

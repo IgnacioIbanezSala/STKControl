@@ -59,8 +59,8 @@ Pa = 1
 d_eve = df_eve["Range"][0:num_samples]
 d_bob = df_sc1a["Range"][0:num_samples]
 
-idx_eve = df_sc1a.index[df_sc1a["Time"] == df_eve.at[14, "Time"]]
-print(df_sc1a.loc[idx_eve, "Range"].values[0])
+#idx_eve = df_sc1a.index[df_sc1a["Time"] == df_eve.at[14, "Time"]]
+#print(df_sc1a.loc[idx_eve, "Range"].values[0])
 #wavelength
 wl = 120
 
@@ -132,8 +132,8 @@ def rs(df_bob, df_eve, h_t_bob, h_t_eve):
         else:
             l_bob = wl / (4*np.pi*df_bob.loc[idx_eve]["Range"])
             l_eve = wl / (4*np.pi*df_eve.loc[idx_eve]["Range"])
-            snr_b = bob_channel.gen_SNR_STKvalues(df_bob.loc[idx_eve]["C_No"], h_t_bob[i])
-            snr_e = eve_channel.gen_SNR_STKvalues(df_eve.loc[idx_eve]["C_No"], h_t_eve[i])
+            snr_b = bob_channel.gen_SNR_STKvalues(df_bob.loc[idx_eve]["C/No"], h_t_bob[i])
+            snr_e = eve_channel.gen_SNR_STKvalues(df_eve.loc[idx_eve]["C/No"], h_t_eve[i])
             Rs_inst = sr.achievable_secrecy_rate(snr_b, snr_e, eb, delta, n)[1]
             Rs.append(Rs_inst)
             times.append(df_eve.loc[i]["Time"])

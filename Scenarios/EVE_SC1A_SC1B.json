@@ -5,9 +5,9 @@
     },
     "time constraints":
     {
-        "start time": "10 Jul 2024 12:00:00.000",
+        "start time": "20 Jun 2025 12:00:00",
         "stop time": "+2 days",
-        "step": 10.000
+        "step": 10
     },
     "satellites": 
     {
@@ -19,7 +19,7 @@
             {
                 "scc": "46266",
                 "tle_from_file": true,
-                "tle_file": "C:/Users/isnac/OneDrive/Escritorio/Programas/Python/STKControl/TLE"
+                "tle_file": "C:/Users/Usuario/OneDrive/Escritorio/Programas/STKControl/TLE/TLE.txt"
             }
         },
         "Saocom1a": 
@@ -30,7 +30,7 @@
             {
                 "scc": "43641",
                 "tle_from_file": true,
-                "tle_file": "C:/Users/isnac/OneDrive/Escritorio/Programas/Python/STKControl/TLE"
+                "tle_file": "C:/Users/Usuario/OneDrive/Escritorio/Programas/STKControl/TLE/TLE.txt"
             }
         },
         "Saocom1b": 
@@ -41,7 +41,7 @@
             {
                 "scc": "46265",
                 "tle_from_file": true,
-                "tle_file": "C:/Users/isnac/OneDrive/Escritorio/Programas/Python/STKControl/TLE"
+                "tle_file": "C:/Users/Usuario/OneDrive/Escritorio/Programas/STKControl/TLE/TLE.txt"
             }
         }
     },
@@ -94,7 +94,7 @@
         "CBA_Transmitter": 
         {
             "name": "transmitterCBA",
-            "dem": "8PSK",
+            "dem": "BPSK",
             "model": "Complex Transmitter Model",
             "auto_scale_bandwidth": true,
             "freq": 20.2,
@@ -106,7 +106,7 @@
         "TF_Transmitter": 
         {
             "name": "transmitterTF",
-            "dem": "8PSK",
+            "dem": "BPSK",
             "model": "Complex Transmitter Model",
             "auto_scale_bandwidth": true,
             "freq": 20.2,
@@ -121,7 +121,7 @@
         "eve_receiver": 
         {
             "name": "receiverEVE",
-            "dem": "8PSK",
+            "dem": "BPSK",
             "receiver_type": "Simple Receiver Model",
             "auto_select_modulator": false,
             "receiver_parent": "Eve",
@@ -131,7 +131,7 @@
         "saocom1a_receiver": 
         {
             "name": "receiverSC1A",
-            "dem": "8PSK",
+            "dem": "BPSK",
             "receiver_type": "Simple Receiver Model",
             "auto_select_modulator": false,
             "receiver_parent": "SAOCOM1A",
@@ -141,7 +141,7 @@
         "saocom1b_receiver": 
         {
             "name": "receiverSC1B",
-            "dem": "8PSK",
+            "dem": "BPSK",
             "receiver_type": "Simple Receiver Model",
             "auto_select_modulator": false,
             "receiver_parent": "SAOCOM1B",

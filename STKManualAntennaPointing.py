@@ -12,6 +12,7 @@ import pandas as pd
 import json
 from numpy import sqrt
 from collections import defaultdict
+from datetime import datetime, timedelta
 
 ##    2. Get reference to running STK instance
 uiApplication = CreateObject('STK11.Application')
@@ -38,6 +39,8 @@ ScenarioName  = scenario_metadata["Scenario"]["name"]
 StartTime   = scenario_metadata["time constraints"]["start time"]
 StopTime     = scenario_metadata["time constraints"]["stop time"]
 StepTime      = scenario_metadata["time constraints"]["step"]
+
+step = timedelta(seconds = StepTime)
 
 ######################################
 ##    Task 2
@@ -116,37 +119,20 @@ for rs in scenario_metadata['receivers']:
     auto_select_modulator = scenario_metadata["receivers"][rs]["auto_select_modulator"]
     dem = scenario_metadata["receivers"][rs]["dem"]
     Receivers[rs_name] = STKEntities.STKReceptor(rs_name, Satellites[parent_name].sat, model, auto_select_modulator, dem)
-
-Sensors = {}
-ss_idx = 0
-for ss in scenario_metadata['sensors']:
-    ss_idx += 1
-    ss_name = scenario_metadata["sensors"][ss]["name"]
-    ss_parent = scenario_metadata["sensors"][ss]["sensor_parent"]
-    targets = scenario_metadata["sensors"][ss]["sensor_targets"]
-    Sensors[ss_name] = STKEntities.STKTargetedSensor(ss_name, GroundStations[ss_parent].groundStation, Satellites[targets[0]].sat.Path)
-    for i in range(1, len(targets)):
-        Sensors[ss_name].add_target(Satellites[targets[i]].sat)
-    
-
+  
 ######################################
 ##    Task 3
 ##    2. Retrive and view the altitud of the satellite during an access interval.
 
-def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
-    access_data = link.DataProviders.Item('Access Data')
-    access_data_query  = access_data.QueryInterface(STKObjects.IAgDataPrvInterval)
-    access_data_results = access_data_query.Exec(StartTime, StopTime)
-    accessStartTime = access_data_results.DataSets.GetDataSetByName('Start Time').GetValues()
-    accessStopTime  = access_data_results.DataSets.GetDataSetByName('Stop Time').GetValues()
-    
+def commLinkInfoTable(link, start_time, index, tabla):
+        
     AER_data = link.DataProviders.Item("AER Data")
     AER_data_query = AER_data.QueryInterface(STKObjects.IAgDataProviderGroup)
     AERdata_Group           = AER_data_query.Group
     AERdata_Default         = AERdata_Group.Item('Default')
     AERdata_TimeVar         = AERdata_Default.QueryInterface(STKObjects.IAgDataPrvTimeVar)
     AERrptElements    = ["Access Number", "Azimuth", "Elevation", "Range"]
-    
+
     LinkInfo = link.DataProviders.Item("Link Information")
     LinkInfo_TimeVar        = LinkInfo.QueryInterface(STKObjects.IAgDataPrvTimeVar)
     rptElements       = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth"]
@@ -158,43 +144,76 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
     ToPositionVel_TimeVar   = ToPositionVel_ICRF.QueryInterface(STKObjects.IAgDataPrvTimeVar)
     PVrptElements     = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
     
-    tabla = defaultdict(list)
-
     access_data = {}
-
-    for start_time, stop_time in zip(accessStartTime, accessStopTime):
-        LinkInfo_results = LinkInfo_TimeVar.ExecElements(start_time, stop_time, Step, rptElements)
-        PositionVelocityInfo_results = ToPositionVel_TimeVar.ExecElements(start_time, stop_time, Step, PVrptElements)
-        AER_data_results = AERdata_TimeVar.ExecElements(start_time, stop_time, Step, AERrptElements)
-        for element in AERrptElements:
-            access_data[element] = list(AER_data_results.DataSets.GetDataSetByName(element).GetValues())
+    new_az = 0
+    new_elev = 0
+    LinkInfo_results = LinkInfo_TimeVar.ExecSingleElements(start_time, rptElements)
+    PositionVelocityInfo_results = ToPositionVel_TimeVar.ExecSingleElements(start_time, PVrptElements)
+    AER_data_results = AERdata_TimeVar.ExecSingleElements(start_time, AERrptElements)
+    for element in AERrptElements:
+        access_data[element] = AER_data_results.DataSets.GetDataSetByName(element).GetValues()
+        if element == 'Azymuth':
+            new_az = access_data[element]
+        if element == 'Elevation':
+            new_az = access_data[element]
+    for element in rptElements:
+        access_data[element] = LinkInfo_results.DataSets.GetDataSetByName(element).GetValues()
         
-        for element in rptElements:
-            access_data[element] = list(LinkInfo_results.DataSets.GetDataSetByName(element).GetValues())
-            
-        for element in PVrptElements:
-            access_data[element] = list(PositionVelocityInfo_results.DataSets.GetDataSetByName(element).GetValues())
-
-        for j in range(AER_data_results.DataSets.GetDataSetByName('Access Number').Count):
-            for key, vals in access_data.items():
-                tabla[key].append(vals[j])
+    for element in PVrptElements:
+        access_data[element] = PositionVelocityInfo_results.DataSets.GetDataSetByName(element).GetValues()
     
-    reporte = pd.DataFrame(tabla)
-    reporte.to_excel("Reports/" + TableName+".xlsx")
-    reporte.to_csv("Reports/" + TableName+".csv")
+    for key, vals in access_data.items():
+        tabla[key].append(vals[0])
+    
+    current_size = AER_data_results.DataSets.GetDataSetByName('Access Number').Count 
+    
+    return new_az, new_elev, current_size
             
 Access = {}    
+tabla = defaultdict(list)
+Az = 0
+Elev = 0
+index = 0
+current_size = 1000
 
 for rec in scenario_metadata["receivers"]:
     if scenario_metadata["receivers"][rec]["link_bool"] == True:
         for ts in range(len(scenario_metadata["receivers"][rec]["link_transmitters"])):
             acces_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_acces_" + scenario_metadata["receivers"][rec]["link_transmitters"][ts]
-            report_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_" + scenario_metadata["receivers"][rec]["link_transmitters"][ts]
-            
-            Access[acces_name] = Transmitters[scenario_metadata["receivers"][rec]["link_transmitters"][ts]].transmitter.GetAccessToObject(Receivers[scenario_metadata["receivers"][rec]["name"]].receptor)
-            Access[acces_name].ComputeAccess()
-            commLinkInfoTable(link=Access[acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, Step=StepTime, TableName=report_name)
-        
+            report_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_" + scenario_metadata["receivers"][rec]["link_transmitters"][ts] + "manual_antena_pointing"
+            ts_name = scenario_metadata["receivers"][rec]["link_transmitters"][ts]
+            rs_name = scenario_metadata["receivers"][rec]["name"]
+            rs_sat_name = scenario_metadata["receivers"][rec]["receiver_parent"]
+            ts_gs_name = scenario_metadata["receivers"][rec]["link_transmitters"][ts]
+            if rs_sat_name == 'SAOCOM1A':
+                Access[acces_name] = Transmitters[ts_name].transmitter.GetAccessToObject(Receivers[rs_name].receptor)
+                Access[acces_name].ComputeAccess()
+                access_data = Access[acces_name].DataProviders.Item('Access Data')
+                access_data_query  = access_data.QueryInterface(STKObjects.IAgDataPrvInterval)
+                access_data_results = access_data_query.Exec(scenario2.StartTime, scenario2.StopTime)
+                accessStartTime = access_data_results.DataSets.GetDataSetByName('Start Time').GetValues()
+                accessStopTime  = access_data_results.DataSets.GetDataSetByName('Stop Time').GetValues()
+                for start_time, stop_time in zip(accessStartTime, accessStopTime):
+                    new_time = start_time[0:20]
+                    new_stop_time = stop_time[0:20]
+                    format_with_time = "%d %b %Y %H:%M:%S"
+                    datetime_object = datetime.strptime(new_time, format_with_time)
+                    datetime_object = datetime_object + step
+                    new_time = datetime_object.strftime('%d %b %Y %H:%M:%S.%f')
+                    
+                    while (new_time < new_stop_time): 
+                        Az, Elev, current_size = commLinkInfoTable(link=Access[acces_name], start_time = new_time, index=0, tabla=tabla)
+                        for key, antennas in Antennas.items():
+                            if key == ts_gs_name:
+                                antennas.set_azelorientation(Az, Elev, 1)
+                        datetime_object = datetime_object + step
+                        new_time = datetime_object.strftime('%d %b %Y %H:%M:%S.%f')
+                        index += 1
+                    index = 0
+                
+                reporte = pd.DataFrame(tabla)
+                reporte.to_excel("Reports/" + report_name+".xlsx")
+                reporte.to_csv("Reports/" + report_name+".csv")
             
 
 
