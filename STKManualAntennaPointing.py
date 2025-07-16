@@ -171,10 +171,13 @@ def commLinkInfoTable(link, start_time, index, tabla):
             
 Access = {}    
 tabla = defaultdict(list)
+access_times = []
 Az = 0
 Elev = 0
 index = 0
 current_size = 1000
+
+#4.6km
 
 for rec in scenario_metadata["receivers"]:
     if scenario_metadata["receivers"][rec]["link_bool"] == True:
@@ -200,17 +203,20 @@ for rec in scenario_metadata["receivers"]:
                     datetime_object = datetime.strptime(new_time, format_with_time)
                     datetime_object = datetime_object + step
                     new_time = datetime_object.strftime('%d %b %Y %H:%M:%S.%f')
-                    
-                    while (new_time < new_stop_time): 
-                        Az, Elev, current_size = commLinkInfoTable(link=Access[acces_name], start_time = new_time, index=0, tabla=tabla)
+                    while (new_time < new_stop_time):
+                        access_times.append(new_time)
+                        datetime_object = datetime_object + step
+                        new_time = datetime_object.strftime('%d %b %Y %H:%M:%S.%f')
+
+                    for times in access_times: 
+                        print(times)
+                        Az, Elev, current_size = commLinkInfoTable(link=Access[acces_name], start_time = times, index=0, tabla=tabla)
                         for key, antennas in Antennas.items():
                             if key == ts_gs_name:
                                 antennas.set_azelorientation(Az, Elev, 1)
-                        datetime_object = datetime_object + step
-                        new_time = datetime_object.strftime('%d %b %Y %H:%M:%S.%f')
-                        index += 1
-                    index = 0
-                
+                                            
+                    access_times.clear()
+                                        
                 reporte = pd.DataFrame(tabla)
                 reporte.to_excel("Reports/" + report_name+".xlsx")
                 reporte.to_csv("Reports/" + report_name+".csv")

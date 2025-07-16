@@ -10,6 +10,25 @@ import Secrecy_Rates as sr
 
 df_eve = pd.read_excel("Reports/Eve_transmitterCBA.xlsx")
 df_sc1a = pd.read_excel("Reports/SAOCOM1A_transmitterCBA.xlsx")
+dc_sc1a_manual = pd.read_excel("Reports/SAOCOM1A_transmitterCBAmanual_antena_pointing.xlsx")
+
+range_sensor = df_sc1a["Range"][1:60]
+range_no_sensor = dc_sc1a_manual["Range"][0:60]
+
+print(range_sensor)
+print(range_no_sensor)
+
+err = []
+
+for rs, rns in zip(range_sensor, range_no_sensor):
+    err.append((rs-rns)**2)
+
+print(np.mean(err))
+
+range_graph = plt.subplots(1,1)[1]
+range_graph.plot(range_sensor)
+range_graph.plot(range_no_sensor)
+plt.show()
 
 print("eve report lenght:", len(df_eve["Range"]))
 print("bob report lenght:", len(df_sc1a["Range"]))

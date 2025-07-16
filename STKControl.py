@@ -149,7 +149,7 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
     
     LinkInfo = link.DataProviders.Item("Link Information")
     LinkInfo_TimeVar        = LinkInfo.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    rptElements       = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth"]
+    rptElements       = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth", "Xmtr Gain", "Xmtr Power"]
     
     PositionVelocityInfo = link.DataProviders.Item("To Position Velocity")
     PositionVelocityInfo_TimeVar = PositionVelocityInfo.QueryInterface(STKObjects.IAgDataProviderGroup)
