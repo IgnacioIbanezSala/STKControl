@@ -128,12 +128,13 @@ for ss in scenario_metadata['sensors']:
     for i in range(1, len(targets)):
         Sensors[ss_name].add_target(Satellites[targets[i]].sat)
     
+root.SaveScenario()
 
 ######################################
 ##    Task 3
 ##    2. Retrive and view the altitud of the satellite during an access interval.
 
-def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
+def commLinkInfoTable(link, StartTime, StopTime, Step, TableName, satellite):
     access_data = link.DataProviders.Item('Access Data')
     access_data_query  = access_data.QueryInterface(STKObjects.IAgDataPrvInterval)
     access_data_results = access_data_query.Exec(StartTime, StopTime)
@@ -157,6 +158,12 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
     ToPositionVel_ICRF      = ToPositionVel_Group.Item('J2000')
     ToPositionVel_TimeVar   = ToPositionVel_ICRF.QueryInterface(STKObjects.IAgDataPrvTimeVar)
     PVrptElements     = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
+
+    LLAInfo = satellite.DataProviders.Item("LLA State")
+    LLAInfo_group_query = LLAInfo.QueryInterface(STKObjects.IAgDataProviderGroup)
+    LLAInfo_group = LLAInfo_group_query.Group.Item('Fixed')
+    LLAInfo_TimeVar = LLAInfo_group.QueryInterface(STKObjects.IAgDataPrvTimeVar)
+    LLArptElements = ["Lat", "Lon", "Alt"]
     
     tabla = defaultdict(list)
 
@@ -166,6 +173,7 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
         LinkInfo_results = LinkInfo_TimeVar.ExecElements(start_time, stop_time, Step, rptElements)
         PositionVelocityInfo_results = ToPositionVel_TimeVar.ExecElements(start_time, stop_time, Step, PVrptElements)
         AER_data_results = AERdata_TimeVar.ExecElements(start_time, stop_time, Step, AERrptElements)
+        LLA_data_results = LLAInfo_TimeVar.ExecElements(start_time, stop_time, Step, LLArptElements)
         for element in AERrptElements:
             access_data[element] = list(AER_data_results.DataSets.GetDataSetByName(element).GetValues())
         
@@ -175,9 +183,13 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName):
         for element in PVrptElements:
             access_data[element] = list(PositionVelocityInfo_results.DataSets.GetDataSetByName(element).GetValues())
 
+        for element in LLArptElements:
+            access_data[element] = list(LLA_data_results.DataSets.GetDataSetByName(element).GetValues())
+        
         for j in range(AER_data_results.DataSets.GetDataSetByName('Access Number').Count):
             for key, vals in access_data.items():
                 tabla[key].append(vals[j])
+        
     
     reporte = pd.DataFrame(tabla)
     reporte.to_excel("Reports/" + TableName+".xlsx")
@@ -190,10 +202,15 @@ for rec in scenario_metadata["receivers"]:
         for ts in range(len(scenario_metadata["receivers"][rec]["link_transmitters"])):
             acces_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_acces_" + scenario_metadata["receivers"][rec]["link_transmitters"][ts]
             report_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_" + scenario_metadata["receivers"][rec]["link_transmitters"][ts]
-            
-            Access[acces_name] = Transmitters[scenario_metadata["receivers"][rec]["link_transmitters"][ts]].transmitter.GetAccessToObject(Receivers[scenario_metadata["receivers"][rec]["name"]].receptor)
+            ts_name = scenario_metadata["receivers"][rec]["link_transmitters"][ts]
+            rs_name = scenario_metadata["receivers"][rec]["name"]
+            rs_sat_name = scenario_metadata["receivers"][rec]["receiver_parent"]
+            ts_gs_name = scenario_metadata["receivers"][rec]["link_transmitters"][ts]
+
+
+            Access[acces_name] = Transmitters[ts_name].transmitter.GetAccessToObject(Receivers[rs_name].receptor)
             Access[acces_name].ComputeAccess()
-            commLinkInfoTable(link=Access[acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, Step=StepTime, TableName=report_name)
+            commLinkInfoTable(link=Access[acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, Step=StepTime, TableName=report_name, satellite=Satellites[rs_sat_name].sat)
         
             
 

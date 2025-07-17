@@ -8,7 +8,7 @@ class STKAntenna():
         antennaModel = antenna_QI.Model
         antennaModel_QI = antennaModel.QueryInterface(STKObjects.IAgAntennaModelParabolic)
         antennaModel_QI.Diameter = diameter
-        antennaModel_QI.ComputerMainlobeGain = computer_main_lobe_gain
+        antennaModel_QI.ComputerDiameter = computer_main_lobe_gain
         antennaModel_QI.DesignFrequency = freq
         self.antennaOrientation = antenna_QI.Orientation
         self.antennaOrientation.AssignAzEl(0, Elv, 1)
