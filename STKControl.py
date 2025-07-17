@@ -117,16 +117,16 @@ for rs in scenario_metadata['receivers']:
     dem = scenario_metadata["receivers"][rs]["dem"]
     Receivers[rs_name] = STKEntities.STKReceptor(rs_name, Satellites[parent_name].sat, model, auto_select_modulator, dem)
 
-Sensors = {}
-ss_idx = 0
-for ss in scenario_metadata['sensors']:
-    ss_idx += 1
-    ss_name = scenario_metadata["sensors"][ss]["name"]
-    ss_parent = scenario_metadata["sensors"][ss]["sensor_parent"]
-    targets = scenario_metadata["sensors"][ss]["sensor_targets"]
-    Sensors[ss_name] = STKEntities.STKTargetedSensor(ss_name, GroundStations[ss_parent].groundStation, Satellites[targets[0]].sat.Path)
-    for i in range(1, len(targets)):
-        Sensors[ss_name].add_target(Satellites[targets[i]].sat)
+#Sensors = {}
+#ss_idx = 0
+#for ss in scenario_metadata['sensors']:
+#    ss_idx += 1
+#    ss_name = scenario_metadata["sensors"][ss]["name"]
+#    ss_parent = scenario_metadata["sensors"][ss]["sensor_parent"]
+#    targets = scenario_metadata["sensors"][ss]["sensor_targets"]
+#    Sensors[ss_name] = STKEntities.STKTargetedSensor(ss_name, GroundStations[ss_parent].groundStation, Satellites[targets[0]].sat.Path)
+#    for i in range(1, len(targets)):
+#        Sensors[ss_name].add_target(Satellites[targets[i]].sat)
     
 root.SaveScenario()
 

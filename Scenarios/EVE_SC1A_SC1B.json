@@ -75,7 +75,7 @@
             "diameter": 13,
             "computer_main_lobe_gain": true,
             "freq": 2.255,
-            "Elv": 0,
+            "Elv": 90,
             "antenna_parent": "CBAGround"
         },
         "TF_Antenna":
@@ -85,7 +85,7 @@
             "diameter": 13,
             "computer_main_lobe_gain": true,
             "freq": 2.255,
-            "Elv": 0,
+            "Elv": 90,
             "antenna_parent": "TFGround"
         }
     },
