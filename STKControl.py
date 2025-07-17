@@ -78,6 +78,17 @@ for gs in scenario_metadata['ground_stations']:
     alt = scenario_metadata["ground_stations"][gs]["alt"]
     GroundStations[gs_name] = STKEntities.STKGroundStation(root, gs_name, unit, use_terrain, lat, long, alt)
 
+Sensors = {}
+ss_idx = 0
+for ss in scenario_metadata['sensors']:
+    ss_idx += 1
+    ss_name = scenario_metadata["sensors"][ss]["name"]
+    ss_parent = scenario_metadata["sensors"][ss]["sensor_parent"]
+    targets = scenario_metadata["sensors"][ss]["sensor_targets"]
+    Sensors[ss_name] = STKEntities.STKTargetedSensor(ss_name, GroundStations[ss_parent].groundStation, Satellites[targets[0]].sat.Path)
+    for i in range(0, len(targets)):
+        Sensors[ss_name].add_target(Satellites[targets[i]].sat)
+
 Antennas = {}
 an_idx = 0
 for an in scenario_metadata["antennas"]:
@@ -89,7 +100,7 @@ for an in scenario_metadata["antennas"]:
     computer_main_lobe_gain = scenario_metadata["antennas"][an]["computer_main_lobe_gain"]
     freq = scenario_metadata["antennas"][an]["freq"]
     Elv = scenario_metadata["antennas"][an]["Elv"]
-    Antennas[an_name] = STKEntities.STKAntenna(an_name, GroundStations[parent_name].groundStation, model, diameter, computer_main_lobe_gain, freq, Elv) 
+    Antennas[an_name] = STKEntities.STKAntenna(an_name, Sensors[parent_name].sensor, model, diameter, computer_main_lobe_gain, freq, Elv) 
 
 Transmitters = {}
 ts_idx = 0
@@ -117,16 +128,7 @@ for rs in scenario_metadata['receivers']:
     dem = scenario_metadata["receivers"][rs]["dem"]
     Receivers[rs_name] = STKEntities.STKReceptor(rs_name, Satellites[parent_name].sat, model, auto_select_modulator, dem)
 
-#Sensors = {}
-#ss_idx = 0
-#for ss in scenario_metadata['sensors']:
-#    ss_idx += 1
-#    ss_name = scenario_metadata["sensors"][ss]["name"]
-#    ss_parent = scenario_metadata["sensors"][ss]["sensor_parent"]
-#    targets = scenario_metadata["sensors"][ss]["sensor_targets"]
-#    Sensors[ss_name] = STKEntities.STKTargetedSensor(ss_name, GroundStations[ss_parent].groundStation, Satellites[targets[0]].sat.Path)
-#    for i in range(1, len(targets)):
-#        Sensors[ss_name].add_target(Satellites[targets[i]].sat)
+
     
 root.SaveScenario()
 
@@ -208,7 +210,7 @@ for rec in scenario_metadata["receivers"]:
             ts_gs_name = scenario_metadata["receivers"][rec]["link_transmitters"][ts]
 
 
-            Access[acces_name] = Transmitters[ts_name].transmitter.GetAccessToObject(Receivers[rs_name].receptor)
+            Access[acces_name] = Transmitters[ts_name].transmitter.GetAccessToObject(Receivers["receiverSC1A"].receptor)
             Access[acces_name].ComputeAccess()
             commLinkInfoTable(link=Access[acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, Step=StepTime, TableName=report_name, satellite=Satellites[rs_sat_name].sat)
         

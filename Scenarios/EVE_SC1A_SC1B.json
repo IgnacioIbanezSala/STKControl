@@ -76,7 +76,7 @@
             "computer_main_lobe_gain": true,
             "freq": 2.255,
             "Elv": 90,
-            "antenna_parent": "CBAGround"
+            "antenna_parent": "CBASensor"
         },
         "TF_Antenna":
         {
@@ -86,7 +86,7 @@
             "computer_main_lobe_gain": true,
             "freq": 2.255,
             "Elv": 90,
-            "antenna_parent": "TFGround"
+            "antenna_parent": "TFSensor"
         }
     },
     "transmitters": 
