@@ -17,9 +17,9 @@
             "propagator_type": 4,
             "propagator_params":
             {
-                "scc": "46266",
+                "scc": "43551",
                 "tle_from_file": true,
-                "tle_file": "C:/Users/Usuario/OneDrive/Escritorio/Programas/STKControl/TLE/TLE.txt"
+                "tle_file": "C:/Users/isnac/OneDrive/Escritorio/Programas/Python/STKControl/TLE/TLE.txt"
             }
         },
         "Saocom1a": 
@@ -30,7 +30,7 @@
             {
                 "scc": "43641",
                 "tle_from_file": true,
-                "tle_file": "C:/Users/Usuario/OneDrive/Escritorio/Programas/STKControl/TLE/TLE.txt"
+                "tle_file": "C:/Users/isnac/OneDrive/Escritorio/Programas/Python/STKControl/TLE/TLE.txt"
             }
         },
         "Saocom1b": 
@@ -41,7 +41,7 @@
             {
                 "scc": "46265",
                 "tle_from_file": true,
-                "tle_file": "C:/Users/Usuario/OneDrive/Escritorio/Programas/STKControl/TLE/TLE.txt"
+                "tle_file": "C:/Users/isnac/OneDrive/Escritorio/Programas/Python/STKControl/TLE/TLE.txt"
             }
         }
     },
@@ -159,13 +159,13 @@
         {
             "name": "CBASensor",
             "sensor_parent": "CBAGround",
-            "sensor_targets": ["SAOCOM1A", "SAOCOM1B", "Eve"]
+            "sensor_targets": ["SAOCOM1A", "SAOCOM1B"]
         },
         "tf_sensor":
         {
             "name": "TFSensor",
             "sensor_parent": "TFGround",
-            "sensor_targets": ["SAOCOM1A", "SAOCOM1B", "Eve"]
+            "sensor_targets": ["SAOCOM1A", "SAOCOM1B"]
         }
     }
 }

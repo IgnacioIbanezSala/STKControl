@@ -15,15 +15,15 @@ dc_sc1a_manual = pd.read_excel("Reports/SAOCOM1A_transmitterCBAmanual_antena_poi
 range_sensor = df_sc1a["Range"][1:60]
 range_no_sensor = dc_sc1a_manual["Range"][0:60]
 
-print(range_sensor)
-print(range_no_sensor)
+#print(range_sensor)
+#print(range_no_sensor)
 
 err = []
 
 for rs, rns in zip(range_sensor, range_no_sensor):
     err.append((rs-rns)**2)
 
-print(np.mean(err))
+print('Mean error: ', np.mean(err))
 
 range_graph = plt.subplots(1,1)[1]
 range_graph.plot(range_sensor)
@@ -150,9 +150,9 @@ def rs(df_bob, df_eve, h_t_bob, h_t_eve):
             pass
         else:
             l_bob = wl / (4*np.pi*df_bob.loc[idx_eve]["Range"])
-            l_eve = wl / (4*np.pi*df_eve.loc[idx_eve]["Range"])
+            l_eve = wl / (4*np.pi*df_eve.loc[i]["Range"])
             snr_b = bob_channel.gen_SNR_STKvalues(df_bob.loc[idx_eve]["C/No"], h_t_bob[i])
-            snr_e = eve_channel.gen_SNR_STKvalues(df_eve.loc[idx_eve]["C/No"], h_t_eve[i])
+            snr_e = eve_channel.gen_SNR_STKvalues(df_eve.loc[i]["C/No"], h_t_eve[i])
             Rs_inst = sr.achievable_secrecy_rate(snr_b, snr_e, eb, delta, n)[1]
             Rs.append(Rs_inst)
             times.append(df_eve.loc[i]["Time"])

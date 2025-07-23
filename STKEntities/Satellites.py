@@ -14,11 +14,13 @@ class Stk_Satellite():
         sat_propagator = self.sat_QI.Propagator
         sat_propagator_QI = sat_propagator.QueryInterface(STKObjects.IAgVePropagatorSGP4)
         sat_propagator_QI.EphemerisInterval.SetImplicitInterval(root.CurrentScenario.Vgt.EventIntervals.Item("AnalysisInterval"))
+        sat_propagator_QI.AutoUpdateEnabled=auto_update
         if(bool_file):
+            sat_propagator_QI.AutoUpdate.SelectedSource=2
+            sat_propagator_QI.AutoUpdate.FileSource.Filename=file_name
             sat_propagator_QI.CommonTasks.AddSegsFromFile(scc_num, file_name)
         else:
             sat_propagator_QI.CommonTasks.AddSegsFromOnlineSource(scc_num)
-        sat_propagator_QI.AutoUpdateEnabled = auto_update
         sat_propagator_QI.Propagate()    
         
         
