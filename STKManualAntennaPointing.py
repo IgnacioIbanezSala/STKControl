@@ -32,7 +32,7 @@ import STKEntities
 
 
 path_to_tle = "TLE/"
-f_idx = open('Scenarios/EVE_SC1A_SC1B.json')
+f_idx = open('Scenarios/Spy_Sat_manualpointing.json')
 scenario_metadata = json.load(f_idx)
 
 ScenarioName  = scenario_metadata["Scenario"]["name"]
@@ -89,10 +89,13 @@ for an in scenario_metadata["antennas"]:
     parent_name = scenario_metadata["antennas"][an]["antenna_parent"]
     model = scenario_metadata["antennas"][an]["model"]
     diameter = scenario_metadata["antennas"][an]["diameter"]
-    computer_main_lobe_gain = scenario_metadata["antennas"][an]["computer_main_lobe_gain"]
+    computer_diameter = scenario_metadata["antennas"][an]["computer_diameter"]
     freq = scenario_metadata["antennas"][an]["freq"]
     Elv = scenario_metadata["antennas"][an]["Elv"]
-    Antennas[an_name] = STKEntities.STKAntenna(an_name, GroundStations[parent_name].groundStation, model, diameter, computer_main_lobe_gain, freq, Elv) 
+    sensor_bool = scenario_metadata["antennas"][an]["sensor_bool"]
+    Antennas[an_name] = STKEntities.STKAntenna(an_name, GroundStations[parent_name].groundStation, model, diameter, computer_diameter, freq) 
+    if not sensor_bool:
+        Antennas[an_name].set_azelorientation(0, Elv, 0) 
 
 Transmitters = {}
 ts_idx = 0
@@ -124,7 +127,7 @@ for rs in scenario_metadata['receivers']:
 ##    Task 3
 ##    2. Retrive and view the altitud of the satellite during an access interval.
 
-def commLinkInfoTable(link, start_time, index, tabla):
+def commLinkInfoTable(link, start_time, index, tabla, antenna):
         
     AER_data = link.DataProviders.Item("AER Data")
     AER_data_query = AER_data.QueryInterface(STKObjects.IAgDataProviderGroup)
@@ -147,15 +150,19 @@ def commLinkInfoTable(link, start_time, index, tabla):
     access_data = {}
     new_az = 0
     new_elev = 0
+
+    AER_data_results = AERdata_TimeVar.ExecSingleElements(start_time, ['Azimuth', 'Elevation'])
+    new_az = AER_data_results.DataSets.GetDataSetByName('Azimuth').GetValues()[0]
+    new_elev = AER_data_results.DataSets.GetDataSetByName('Elevation').GetValues()[0]
+
+    antenna.set_azelorientation(new_az, new_elev, 0)
+
     LinkInfo_results = LinkInfo_TimeVar.ExecSingleElements(start_time, rptElements)
     PositionVelocityInfo_results = ToPositionVel_TimeVar.ExecSingleElements(start_time, PVrptElements)
     AER_data_results = AERdata_TimeVar.ExecSingleElements(start_time, AERrptElements)
     for element in AERrptElements:
         access_data[element] = AER_data_results.DataSets.GetDataSetByName(element).GetValues()
-        if element == 'Azymuth':
-            new_az = access_data[element]
-        if element == 'Elevation':
-            new_az = access_data[element]
+        
     for element in rptElements:
         access_data[element] = LinkInfo_results.DataSets.GetDataSetByName(element).GetValues()
         
@@ -187,7 +194,7 @@ for rec in scenario_metadata["receivers"]:
             ts_name = scenario_metadata["receivers"][rec]["link_transmitters"][ts]
             rs_name = scenario_metadata["receivers"][rec]["name"]
             rs_sat_name = scenario_metadata["receivers"][rec]["receiver_parent"]
-            ts_gs_name = scenario_metadata["receivers"][rec]["link_transmitters"][ts]
+            ts_an_name = scenario_metadata["receivers"][rec]["link_antennas"][ts]
             if rs_sat_name == 'SAOCOM1A':
                 Access[acces_name] = Transmitters[ts_name].transmitter.GetAccessToObject(Receivers[rs_name].receptor)
                 Access[acces_name].ComputeAccess()
@@ -209,11 +216,8 @@ for rec in scenario_metadata["receivers"]:
                         new_time = datetime_object.strftime('%d %b %Y %H:%M:%S.%f')
 
                     for times in access_times: 
-                        print(times)
-                        Az, Elev, current_size = commLinkInfoTable(link=Access[acces_name], start_time = times, index=0, tabla=tabla)
-                        for key, antennas in Antennas.items():
-                            if key == ts_gs_name:
-                                antennas.set_azelorientation(Az, Elev, 1)
+                        Az, Elev, current_size = commLinkInfoTable(link=Access[acces_name], start_time = times, index=0, tabla=tabla, antenna=Antennas[ts_an_name])
+                        
                                             
                     access_times.clear()
                                         

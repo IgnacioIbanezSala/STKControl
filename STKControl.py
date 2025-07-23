@@ -97,10 +97,13 @@ for an in scenario_metadata["antennas"]:
     parent_name = scenario_metadata["antennas"][an]["antenna_parent"]
     model = scenario_metadata["antennas"][an]["model"]
     diameter = scenario_metadata["antennas"][an]["diameter"]
-    computer_main_lobe_gain = scenario_metadata["antennas"][an]["computer_main_lobe_gain"]
+    computer_diameter = scenario_metadata["antennas"][an]["computer_diameter"]
     freq = scenario_metadata["antennas"][an]["freq"]
     Elv = scenario_metadata["antennas"][an]["Elv"]
-    Antennas[an_name] = STKEntities.STKAntenna(an_name, Sensors[parent_name].sensor, model, diameter, computer_main_lobe_gain, freq, Elv) 
+    sensor_bool = scenario_metadata["antennas"][an]["sensor_bool"]
+    Antennas[an_name] = STKEntities.STKAntenna(an_name, Sensors[parent_name].sensor, model, diameter, computer_diameter, freq)
+    if not sensor_bool:
+        Antennas[an_name].set_azelorientation(0, Elv, 0)  
 
 Transmitters = {}
 ts_idx = 0
@@ -210,7 +213,7 @@ for rec in scenario_metadata["receivers"]:
             ts_gs_name = scenario_metadata["receivers"][rec]["link_transmitters"][ts]
 
 
-            Access[acces_name] = Transmitters[ts_name].transmitter.GetAccessToObject(Receivers["receiverSC1A"].receptor)
+            Access[acces_name] = Transmitters[ts_name].transmitter.GetAccessToObject(Receivers[rs_name].receptor)
             Access[acces_name].ComputeAccess()
             commLinkInfoTable(link=Access[acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, Step=StepTime, TableName=report_name, satellite=Satellites[rs_sat_name].sat)
         

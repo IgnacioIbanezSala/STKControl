@@ -76,8 +76,8 @@
             "computer_diameter": true,
             "freq": 2.255,
             "Elv": 90,
-            "antenna_parent": "CBASensor",
-            "sensor_bool": true
+            "antenna_parent": "CBAGround",
+            "sensor_bool": false
         },
         "TF_Antenna":
         {
@@ -87,8 +87,8 @@
             "computer_diameter": true,
             "freq": 2.255,
             "Elv": 90,
-            "antenna_parent": "TFSensor",
-            "sensor_bool": true
+            "antenna_parent": "TFGround",
+            "sensor_bool": false
         }
     },
     "transmitters": 
@@ -130,7 +130,8 @@
             "auto_select_modulator": false,
             "receiver_parent": "Eve",
             "link_bool": true,
-            "link_transmitters": ["transmitterCBA", "transmitterTF"]
+            "link_transmitters": ["transmitterCBA", "transmitterTF"],
+            "link_antennas": ["antennaCBA", "antennaTF"]
         },
         "saocom1a_receiver": 
         {
@@ -140,7 +141,8 @@
             "auto_select_modulator": false,
             "receiver_parent": "SAOCOM1A",
             "link_bool": true,
-            "link_transmitters": ["transmitterCBA", "transmitterTF"]
+            "link_transmitters": ["transmitterCBA", "transmitterTF"],
+            "link_antennas": ["antennaCBA", "antennaTF"]
         },
         "saocom1b_receiver": 
         {
@@ -150,22 +152,8 @@
             "auto_select_modulator": false,
             "receiver_parent": "SAOCOM1B",
             "link_bool": true,
-            "link_transmitters": ["transmitterCBA", "transmitterTF"]
-        }
-    },
-    "sensors":
-    {
-        "cba_sensor":
-        {
-            "name": "CBASensor",
-            "sensor_parent": "CBAGround",
-            "sensor_targets": ["SAOCOM1A", "SAOCOM1B", "Eve"]
-        },
-        "tf_sensor":
-        {
-            "name": "TFSensor",
-            "sensor_parent": "TFGround",
-            "sensor_targets": ["SAOCOM1A", "SAOCOM1B", "Eve"]
+            "link_transmitters": ["transmitterCBA", "transmitterTF"],
+            "link_antennas": ["antennaCBA", "antennaTF"]
         }
     }
 }
