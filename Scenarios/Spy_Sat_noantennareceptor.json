@@ -6,7 +6,7 @@
     "time constraints":
     {
         "start time": "20 Jun 2025 12:00:00",
-        "stop time": "+2 days",
+        "stop time": "+1 days",
         "step": 1
     },
     "satellites": 
@@ -89,39 +89,6 @@
             "Elv": 90,
             "antenna_parent": "TFSensor",
             "sensor_bool": true
-        },
-        "SAOCOM1A_Antenna":
-        {
-            "name": "antennaSC1A",
-            "model": "Parabolic",
-            "diameter": 13,
-            "computer_diameter": true,
-            "freq": 2.255,
-            "Elv": 90,
-            "antenna_parent": "SAOCOM1A",
-            "sensor_bool": false
-        },
-        "EVE_Antenna":
-        {
-            "name": "antennaEve",
-            "model": "Parabolic",
-            "diameter": 13,
-            "computer_diameter": true,
-            "freq": 2.255,
-            "Elv": 90,
-            "antenna_parent": "Eve",
-            "sensor_bool": false
-        },
-        "SAOCOM1B_Antenna":
-        {
-            "name": "antennaSC1A",
-            "model": "Parabolic",
-            "diameter": 13,
-            "computer_diameter": true,
-            "freq": 2.255,
-            "Elv": 90,
-            "antenna_parent": "SAOCOM1B",
-            "sensor_bool": false
         }
     },
     "transmitters": 
@@ -159,33 +126,33 @@
         {
             "name": "receiverEVE",
             "dem": "BPSK",
-            "receiver_type": "Complex Receiver Model",
+            "receiver_type": "Simple Receiver Model",
             "auto_select_modulator": false,
             "receiver_parent": "Eve",
             "link_bool": true,
-            "antenna_control": 0,
+            "antenna_control": 1,
             "link_transmitters": ["transmitterCBA", "transmitterTF"]
         },
         "saocom1a_receiver": 
         {
             "name": "receiverSC1A",
             "dem": "BPSK",
-            "receiver_type": "Complex Receiver Model",
+            "receiver_type": "Simple Receiver Model",
             "auto_select_modulator": false,
             "receiver_parent": "SAOCOM1A",
             "link_bool": true,
-            "antenna_control": 0,
+            "antenna_control": 1,
             "link_transmitters": ["transmitterCBA", "transmitterTF"]
         },
         "saocom1b_receiver": 
         {
             "name": "receiverSC1B",
             "dem": "BPSK",
-            "receiver_type": "Complex Receiver Model",
+            "receiver_type": "Simple Receiver Model",
             "auto_select_modulator": false,
             "receiver_parent": "SAOCOM1B",
             "link_bool": true,
-            "antenna_control": 0,
+            "antenna_control": 1,
             "link_transmitters": ["transmitterCBA", "transmitterTF"]
         }
     },
@@ -201,12 +168,6 @@
         {
             "name": "TFSensor",
             "sensor_parent": "TFGround",
-            "sensor_targets": ["SAOCOM1A", "SAOCOM1B"]
-        },
-        "sc1a_sensor":
-        {
-            "name": "SC1ASensor",
-            "sensor_parent": "SAOCOM1A",
             "sensor_targets": ["SAOCOM1A", "SAOCOM1B"]
         }
     }

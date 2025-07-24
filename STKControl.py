@@ -31,7 +31,7 @@ import STKEntities
 
 
 path_to_tle = "TLE/"
-f_idx = open('Scenarios/EVE_SC1A_SC1B.json')
+f_idx = open('Scenarios/Spy_Sat_noantennareceptor.json')
 scenario_metadata = json.load(f_idx)
 
 ScenarioName  = scenario_metadata["Scenario"]["name"]
@@ -101,9 +101,12 @@ for an in scenario_metadata["antennas"]:
     freq = scenario_metadata["antennas"][an]["freq"]
     Elv = scenario_metadata["antennas"][an]["Elv"]
     sensor_bool = scenario_metadata["antennas"][an]["sensor_bool"]
-    Antennas[an_name] = STKEntities.STKAntenna(an_name, Sensors[parent_name].sensor, model, diameter, computer_diameter, freq)
     if not sensor_bool:
+        Antennas[an_name] = STKEntities.STKAntenna(an_name, Satellites[parent_name].sat, model, diameter, computer_diameter, freq)
         Antennas[an_name].set_azelorientation(0, Elv, 0)  
+    else:
+        Antennas[an_name] = STKEntities.STKAntenna(an_name, Sensors[parent_name].sensor, model, diameter, computer_diameter, freq)
+
 
 Transmitters = {}
 ts_idx = 0
@@ -129,7 +132,8 @@ for rs in scenario_metadata['receivers']:
     model = scenario_metadata["receivers"][rs]["receiver_type"]
     auto_select_modulator = scenario_metadata["receivers"][rs]["auto_select_modulator"]
     dem = scenario_metadata["receivers"][rs]["dem"]
-    Receivers[rs_name] = STKEntities.STKReceptor(rs_name, Satellites[parent_name].sat, model, auto_select_modulator, dem)
+    antenna_control = scenario_metadata["receivers"][rs]["antenna_control"]
+    Receivers[rs_name] = STKEntities.STKReceptor(rs_name, Satellites[parent_name].sat, model, auto_select_modulator, dem, antenna_control)
 
 
     
@@ -155,7 +159,7 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, satellite):
     
     LinkInfo = link.DataProviders.Item("Link Information")
     LinkInfo_TimeVar        = LinkInfo.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    rptElements       = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth", "Xmtr Gain", "Xmtr Power", "Rcvr Gain", "Carrier Power at Rcvr Input", "Rcvd. Iso. Power"]
+    rptElements       = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth", "Xmtr Gain", "Xmtr Power", "Rcvd. Iso. Power", "Carrier Power at Rcvr Input"]
     
     PositionVelocityInfo = link.DataProviders.Item("To Position Velocity")
     PositionVelocityInfo_TimeVar = PositionVelocityInfo.QueryInterface(STKObjects.IAgDataProviderGroup)
