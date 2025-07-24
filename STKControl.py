@@ -139,7 +139,7 @@ root.SaveScenario()
 ##    Task 3
 ##    2. Retrive and view the altitud of the satellite during an access interval.
 
-def commLinkInfoTable(link, StartTime, StopTime, Step, TableName, satellite):
+def commLinkInfoTable(link, StartTime, StopTime, Step, satellite):
     access_data = link.DataProviders.Item('Access Data')
     access_data_query  = access_data.QueryInterface(STKObjects.IAgDataPrvInterval)
     access_data_results = access_data_query.Exec(StartTime, StopTime)
@@ -195,12 +195,11 @@ def commLinkInfoTable(link, StartTime, StopTime, Step, TableName, satellite):
             for key, vals in access_data.items():
                 tabla[key].append(vals[j])
         
+    return tabla
     
-    reporte = pd.DataFrame(tabla)
-    reporte.to_excel("Reports/" + TableName+".xlsx")
-    reporte.to_csv("Reports/" + TableName+".csv")
             
-Access = {}    
+Access = {}  
+tabla = defaultdict(list) 
 
 for rec in scenario_metadata["receivers"]:
     if scenario_metadata["receivers"][rec]["link_bool"] == True:
@@ -208,6 +207,7 @@ for rec in scenario_metadata["receivers"]:
             acces_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_acces_" + scenario_metadata["receivers"][rec]["link_transmitters"][ts]
             report_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_" + scenario_metadata["receivers"][rec]["link_transmitters"][ts]
             ts_name = scenario_metadata["receivers"][rec]["link_transmitters"][ts]
+            dem = scenario_metadata["receivers"][rec]["dem"]
             rs_name = scenario_metadata["receivers"][rec]["name"]
             rs_sat_name = scenario_metadata["receivers"][rec]["receiver_parent"]
             ts_gs_name = scenario_metadata["receivers"][rec]["link_transmitters"][ts]
@@ -215,7 +215,12 @@ for rec in scenario_metadata["receivers"]:
 
             Access[acces_name] = Transmitters[ts_name].transmitter.GetAccessToObject(Receivers[rs_name].receptor)
             Access[acces_name].ComputeAccess()
-            commLinkInfoTable(link=Access[acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, Step=StepTime, TableName=report_name, satellite=Satellites[rs_sat_name].sat)
+            tabla = commLinkInfoTable(link=Access[acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, Step=StepTime, satellite=Satellites[rs_sat_name].sat)
+            reporte = pd.DataFrame(tabla)
+            reporte_len = len(reporte['Access Number'])
+            reporte['Modulation'] = [dem] * reporte_len
+            reporte.to_excel("Reports/" + report_name+".xlsx")
+            reporte.to_csv("Reports/" + report_name+".csv")
         
             
 
