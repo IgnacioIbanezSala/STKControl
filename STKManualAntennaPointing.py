@@ -121,7 +121,8 @@ for rs in scenario_metadata['receivers']:
     model = scenario_metadata["receivers"][rs]["receiver_type"]
     auto_select_modulator = scenario_metadata["receivers"][rs]["auto_select_modulator"]
     dem = scenario_metadata["receivers"][rs]["dem"]
-    Receivers[rs_name] = STKEntities.STKReceptor(rs_name, Satellites[parent_name].sat, model, auto_select_modulator, dem)
+    antenna_control = scenario_metadata["receivers"][rs]["antenna_control"]
+    Receivers[rs_name] = STKEntities.STKReceptor(rs_name, Satellites[parent_name].sat, model, auto_select_modulator, dem, antenna_control)
   
 ######################################
 ##    Task 3
@@ -138,7 +139,7 @@ def commLinkInfoTable(link, start_time, index, tabla, antenna):
 
     LinkInfo = link.DataProviders.Item("Link Information")
     LinkInfo_TimeVar        = LinkInfo.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    rptElements       = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth"]
+    rptElements       = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth", "Xmtr Gain", "Xmtr Power", "Rcvd. Iso. Power", "Carrier Power at Rcvr Input"]
     
     PositionVelocityInfo = link.DataProviders.Item("To Position Velocity")
     PositionVelocityInfo_TimeVar = PositionVelocityInfo.QueryInterface(STKObjects.IAgDataProviderGroup)

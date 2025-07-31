@@ -17,9 +17,9 @@
             "propagator_type": 4,
             "propagator_params":
             {
-                "scc": "46266",
+                "scc": "43551",
                 "tle_from_file": true,
-                "tle_file": "C:/Users/Usuario/OneDrive/Escritorio/Programas/STKControl/TLE/TLE.txt"
+                "tle_file": "C:/Users/isnac/OneDrive/Escritorio/Programas/Python/STKControl/TLE/TLE.txt"
             }
         },
         "Saocom1a": 
@@ -30,7 +30,7 @@
             {
                 "scc": "43641",
                 "tle_from_file": true,
-                "tle_file": "C:/Users/Usuario/OneDrive/Escritorio/Programas/STKControl/TLE/TLE.txt"
+                "tle_file": "C:/Users/isnac/OneDrive/Escritorio/Programas/Python/STKControl/TLE/TLE.txt"
             }
         },
         "Saocom1b": 
@@ -41,7 +41,7 @@
             {
                 "scc": "46265",
                 "tle_from_file": true,
-                "tle_file": "C:/Users/Usuario/OneDrive/Escritorio/Programas/STKControl/TLE/TLE.txt"
+                "tle_file": "C:/Users/isnac/OneDrive/Escritorio/Programas/Python/STKControl/TLE/TLE.txt"
             }
         }
     },
@@ -130,6 +130,7 @@
             "auto_select_modulator": false,
             "receiver_parent": "Eve",
             "link_bool": true,
+            "antenna_control": 1,
             "link_transmitters": ["transmitterCBA", "transmitterTF"],
             "link_antennas": ["antennaCBA", "antennaTF"]
         },
@@ -141,6 +142,7 @@
             "auto_select_modulator": false,
             "receiver_parent": "SAOCOM1A",
             "link_bool": true,
+            "antenna_control": 1,
             "link_transmitters": ["transmitterCBA", "transmitterTF"],
             "link_antennas": ["antennaCBA", "antennaTF"]
         },
@@ -152,6 +154,7 @@
             "auto_select_modulator": false,
             "receiver_parent": "SAOCOM1B",
             "link_bool": true,
+            "antenna_control": 1,
             "link_transmitters": ["transmitterCBA", "transmitterTF"],
             "link_antennas": ["antennaCBA", "antennaTF"]
         }
