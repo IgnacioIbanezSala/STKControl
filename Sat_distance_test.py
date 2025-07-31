@@ -13,6 +13,7 @@ df_sc1a = pd.read_excel("Reports/SAOCOM1A_transmitterCBA.xlsx")
 span = min(len(df_eve["Range"]), len(df_sc1a["Range"]))
 error = []
 sat_distance = []
+dates = []
 
 for i in range(span):
     
@@ -24,10 +25,15 @@ for i in range(span):
         y_diff = df_sc1a.loc[idx_sc1a]["y"] - df_eve.loc[i]["y"]
         z_diff = df_sc1a.loc[idx_sc1a]["z"] - df_eve.loc[i]["z"]
         distance = sqrt(x_diff**2+y_diff**2+z_diff**2)
+        dates.append(df_eve.loc[i]["Time"])
         sat_distance.append(distance)
                 
 distance_graph = plt.subplots(1,1)[1]
-distance_graph.plot(sat_distance)
+distance_graph.plot(dates, sat_distance, label='Distance between satellites', marker='x', ls='--')
+distance_graph.tick_params(axis='x', labelrotation=70, labelsize = 4)
+plt.title('Distance between Eve & Bob')
+plt.xlabel("Date")
+plt.ylabel("Distance [Km]")
 plt.show()
 
 """
