@@ -21,24 +21,24 @@ def get_observation(link, time, tabla):
     PVrptElements     = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
     
     access_data = {}
-
+    obs = []
     LinkInfo_results = LinkInfo_TimeVar.ExecSingleElements(time, rptElements)
     PositionVelocityInfo_results = ToPositionVel_TimeVar.ExecSingleElements(time, PVrptElements)
     AER_data_results = AERdata_TimeVar.ExecSingleElements(time, AERrptElements)
     for element in AERrptElements:
         access_data[element] = AER_data_results.DataSets.GetDataSetByName(element).GetValues()
-        
+        obs.append(access_data[element])
     for element in rptElements:
         access_data[element] = LinkInfo_results.DataSets.GetDataSetByName(element).GetValues()
-        
+        obs.append(access_data[element])
     for element in PVrptElements:
         access_data[element] = PositionVelocityInfo_results.DataSets.GetDataSetByName(element).GetValues()
-    
+        obs.append(access_data[element])
     for key, vals in access_data.items():
         tabla[key].append(vals[0])
-    
+        obs.append(access_data[element])
     current_size = AER_data_results.DataSets.GetDataSetByName('Access Number').Count 
     
-    return access_data
+    return access_data, obs
 
 
