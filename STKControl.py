@@ -28,6 +28,7 @@ root = uiApplication.Personality2
 from comtypes.gen import STKObjects
 from comtypes.gen import STKUtil
 import STKEntities
+import STKAPI as stk_api
 
 
 path_to_tle = "TLE/"
@@ -142,68 +143,8 @@ root.SaveScenario()
 ######################################
 ##    Task 3
 ##    2. Retrive and view the altitud of the satellite during an access interval.
-
-def commLinkInfoTable(link, StartTime, StopTime, Step, satellite):
-    access_data = link.DataProviders.Item('Access Data')
-    access_data_query  = access_data.QueryInterface(STKObjects.IAgDataPrvInterval)
-    access_data_results = access_data_query.Exec(StartTime, StopTime)
-    accessStartTime = access_data_results.DataSets.GetDataSetByName('Start Time').GetValues()
-    accessStopTime  = access_data_results.DataSets.GetDataSetByName('Stop Time').GetValues()
-    
-    AER_data = link.DataProviders.Item("AER Data")
-    AER_data_query = AER_data.QueryInterface(STKObjects.IAgDataProviderGroup)
-    AERdata_Group           = AER_data_query.Group
-    AERdata_Default         = AERdata_Group.Item('Default')
-    AERdata_TimeVar         = AERdata_Default.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    AERrptElements    = ["Access Number", "Azimuth", "Elevation", "Range"]
-    
-    LinkInfo = link.DataProviders.Item("Link Information")
-    LinkInfo_TimeVar        = LinkInfo.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    rptElements       = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth", "Xmtr Gain", "Xmtr Power", "Rcvd. Iso. Power", "Carrier Power at Rcvr Input"]
-    
-    PositionVelocityInfo = link.DataProviders.Item("To Position Velocity")
-    PositionVelocityInfo_TimeVar = PositionVelocityInfo.QueryInterface(STKObjects.IAgDataProviderGroup)
-    ToPositionVel_Group   = PositionVelocityInfo_TimeVar.Group
-    ToPositionVel_ICRF      = ToPositionVel_Group.Item('J2000')
-    ToPositionVel_TimeVar   = ToPositionVel_ICRF.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    PVrptElements     = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
-
-    LLAInfo = satellite.DataProviders.Item("LLA State")
-    LLAInfo_group_query = LLAInfo.QueryInterface(STKObjects.IAgDataProviderGroup)
-    LLAInfo_group = LLAInfo_group_query.Group.Item('Fixed')
-    LLAInfo_TimeVar = LLAInfo_group.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    LLArptElements = ["Lat", "Lon", "Alt"]
-    
-    tabla = defaultdict(list)
-
-    access_data = {}
-
-    for start_time, stop_time in zip(accessStartTime, accessStopTime):
-        LinkInfo_results = LinkInfo_TimeVar.ExecElements(start_time, stop_time, Step, rptElements)
-        PositionVelocityInfo_results = ToPositionVel_TimeVar.ExecElements(start_time, stop_time, Step, PVrptElements)
-        AER_data_results = AERdata_TimeVar.ExecElements(start_time, stop_time, Step, AERrptElements)
-        LLA_data_results = LLAInfo_TimeVar.ExecElements(start_time, stop_time, Step, LLArptElements)
-        for element in AERrptElements:
-            access_data[element] = list(AER_data_results.DataSets.GetDataSetByName(element).GetValues())
-        
-        for element in rptElements:
-            access_data[element] = list(LinkInfo_results.DataSets.GetDataSetByName(element).GetValues())
             
-        for element in PVrptElements:
-            access_data[element] = list(PositionVelocityInfo_results.DataSets.GetDataSetByName(element).GetValues())
-
-        for element in LLArptElements:
-            access_data[element] = list(LLA_data_results.DataSets.GetDataSetByName(element).GetValues())
-        
-        for j in range(AER_data_results.DataSets.GetDataSetByName('Access Number').Count):
-            for key, vals in access_data.items():
-                tabla[key].append(vals[j])
-        
-    return tabla
-    
-            
-Access = {}  
-tabla = defaultdict(list) 
+Access = {}
 
 for rec in scenario_metadata["receivers"]:
     if scenario_metadata["receivers"][rec]["link_bool"] == True:
@@ -219,7 +160,27 @@ for rec in scenario_metadata["receivers"]:
 
             Access[acces_name] = Transmitters[ts_name].transmitter.GetAccessToObject(Receivers[rs_name].receptor)
             Access[acces_name].ComputeAccess()
-            tabla = commLinkInfoTable(link=Access[acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, Step=StepTime, satellite=Satellites[rs_sat_name].sat)
+
+            accessStartTime, accessStopTime, duration_1 = stk_api.get_access_times(Access[acces_name], scenario2)
+
+            aer_elements = ["Access Number", "Azimuth", "Elevation", "Range"]
+            AER_data = stk_api.get_all_access_link_data(Access[acces_name], "AER Data", "Default", accessStartTime, accessStopTime, StepTime, aer_elements)
+
+            li_elements = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth", "Xmtr Gain", "Xmtr Power", "Rcvd. Iso. Power", "Carrier Power at Rcvr Input"]
+            LinkInfo = stk_api.get_all_access_link_data(Access[acces_name], "Link Information", 0, accessStartTime, accessStopTime, StepTime, li_elements)
+
+            pv_elements = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
+            PositionVelocity = stk_api.get_all_access_link_data(Access[acces_name], "To Position Velocity", "J2000", accessStartTime, accessStopTime, StepTime, pv_elements)
+
+            lla_elements = ["Lat", "Lon", "Alt"]
+            LLAState = stk_api.get_all_access_link_data(Satellites[rs_sat_name].sat, "LLA State", "Fixed", accessStartTime, accessStopTime, StepTime, lla_elements)
+
+            to_join_dict = (AER_data, LinkInfo, PositionVelocity, LLAState)
+            tabla = defaultdict(list)
+            for dicts in to_join_dict:
+                for key, vals in dicts.items():
+                    tabla[key] = vals
+
             reporte = pd.DataFrame(tabla)
             reporte_len = len(reporte['Access Number'])
             reporte['Modulation'] = [dem] * reporte_len

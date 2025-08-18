@@ -187,121 +187,10 @@ def TimeSync(accessStartTime_1, accessStopTime_1, duration_1, link, StartTime, S
         new_access_times.append(new_time)
         datetime_object = datetime_object + step
         new_time = datetime_object.strftime('%d %b %Y %H:%M:%S.%f')
-    print(new_access_times)
 
     return new_start_time, new_stop_time, new_access_times
     
-
-def commLinkInfoTable(link, StartTime, StopTime, Step, satellite):
-    access_data = link.DataProviders.Item('Access Data')
-    access_data_query  = access_data.QueryInterface(STKObjects.IAgDataPrvInterval)
-    access_data_results = access_data_query.Exec(StartTime, StopTime)
-    accessStartTime = access_data_results.DataSets.GetDataSetByName('Start Time').GetValues()
-    accessStopTime  = access_data_results.DataSets.GetDataSetByName('Stop Time').GetValues()
-    duration_1 = access_data_results.DataSets.GetDataSetByName('Duration').GetValues()
     
-    AER_data = link.DataProviders.Item("AER Data")
-    AER_data_query = AER_data.QueryInterface(STKObjects.IAgDataProviderGroup)
-    AERdata_Group           = AER_data_query.Group
-    AERdata_Default         = AERdata_Group.Item('Default')
-    AERdata_TimeVar         = AERdata_Default.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    AERrptElements    = ["Access Number", "Azimuth", "Elevation", "Range"]
-    
-    LinkInfo = link.DataProviders.Item("Link Information")
-    LinkInfo_TimeVar        = LinkInfo.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    rptElements       = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth", "Xmtr Gain", "Xmtr Power", "Rcvd. Iso. Power", "Carrier Power at Rcvr Input"]
-    
-    PositionVelocityInfo = link.DataProviders.Item("To Position Velocity")
-    PositionVelocityInfo_TimeVar = PositionVelocityInfo.QueryInterface(STKObjects.IAgDataProviderGroup)
-    ToPositionVel_Group   = PositionVelocityInfo_TimeVar.Group
-    ToPositionVel_ICRF      = ToPositionVel_Group.Item('J2000')
-    ToPositionVel_TimeVar   = ToPositionVel_ICRF.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    PVrptElements     = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
-
-    LLAInfo = satellite.DataProviders.Item("LLA State")
-    LLAInfo_group_query = LLAInfo.QueryInterface(STKObjects.IAgDataProviderGroup)
-    LLAInfo_group = LLAInfo_group_query.Group.Item('Fixed')
-    LLAInfo_TimeVar = LLAInfo_group.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    LLArptElements = ["Lat", "Lon", "Alt"]
-    
-    tabla = defaultdict(list)
-
-    access_data = {}
-
-    for start_time, stop_time in zip(accessStartTime, accessStopTime):
-        LinkInfo_results = LinkInfo_TimeVar.ExecElements(start_time, stop_time, Step, rptElements)
-        PositionVelocityInfo_results = ToPositionVel_TimeVar.ExecElements(start_time, stop_time, Step, PVrptElements)
-        AER_data_results = AERdata_TimeVar.ExecElements(start_time, stop_time, Step, AERrptElements)
-        LLA_data_results = LLAInfo_TimeVar.ExecElements(start_time, stop_time, Step, LLArptElements)
-        for element in AERrptElements:
-            access_data[element] = list(AER_data_results.DataSets.GetDataSetByName(element).GetValues())
-        
-        for element in rptElements:
-            access_data[element] = list(LinkInfo_results.DataSets.GetDataSetByName(element).GetValues())
-            
-        for element in PVrptElements:
-            access_data[element] = list(PositionVelocityInfo_results.DataSets.GetDataSetByName(element).GetValues())
-
-        for element in LLArptElements:
-            access_data[element] = list(LLA_data_results.DataSets.GetDataSetByName(element).GetValues())
-        
-        for j in range(AER_data_results.DataSets.GetDataSetByName('Access Number').Count):
-            for key, vals in access_data.items():
-                tabla[key].append(vals[j])
-        
-    return tabla, accessStartTime, accessStopTime, duration_1
-    
-def commLinkInfoTableSyncTimes(link, start_time, stop_time, Step, satellite):  
-        
-    AER_data = link.DataProviders.Item("AER Data")
-    AER_data_query = AER_data.QueryInterface(STKObjects.IAgDataProviderGroup)
-    AERdata_Group           = AER_data_query.Group
-    AERdata_Default         = AERdata_Group.Item('Default')
-    AERdata_TimeVar         = AERdata_Default.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    AERrptElements    = ["Access Number", "Azimuth", "Elevation", "Range"]
-    
-    LinkInfo = link.DataProviders.Item("Link Information")
-    LinkInfo_TimeVar        = LinkInfo.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    rptElements       = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth", "Xmtr Gain", "Xmtr Power", "Rcvd. Iso. Power", "Carrier Power at Rcvr Input"]
-    
-    PositionVelocityInfo = link.DataProviders.Item("To Position Velocity")
-    PositionVelocityInfo_TimeVar = PositionVelocityInfo.QueryInterface(STKObjects.IAgDataProviderGroup)
-    ToPositionVel_Group   = PositionVelocityInfo_TimeVar.Group
-    ToPositionVel_ICRF      = ToPositionVel_Group.Item('J2000')
-    ToPositionVel_TimeVar   = ToPositionVel_ICRF.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    PVrptElements     = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
-
-    LLAInfo = satellite.DataProviders.Item("LLA State")
-    LLAInfo_group_query = LLAInfo.QueryInterface(STKObjects.IAgDataProviderGroup)
-    LLAInfo_group = LLAInfo_group_query.Group.Item('Fixed')
-    LLAInfo_TimeVar = LLAInfo_group.QueryInterface(STKObjects.IAgDataPrvTimeVar)
-    LLArptElements = ["Lat", "Lon", "Alt"]
-    
-    tabla = defaultdict(list)
-
-    access_data = {}
-
-    LinkInfo_results = LinkInfo_TimeVar.ExecElements(start_time, stop_time, Step, rptElements)
-    PositionVelocityInfo_results = ToPositionVel_TimeVar.ExecElements(start_time, stop_time, Step, PVrptElements)
-    AER_data_results = AERdata_TimeVar.ExecElements(start_time, stop_time, Step, AERrptElements)
-    LLA_data_results = LLAInfo_TimeVar.ExecElements(start_time, stop_time, Step, LLArptElements)
-    for element in AERrptElements:
-        access_data[element] = list(AER_data_results.DataSets.GetDataSetByName(element).GetValues())
-    
-    for element in rptElements:
-        access_data[element] = list(LinkInfo_results.DataSets.GetDataSetByName(element).GetValues())
-        
-    for element in PVrptElements:
-        access_data[element] = list(PositionVelocityInfo_results.DataSets.GetDataSetByName(element).GetValues())
-    for element in LLArptElements:
-        access_data[element] = list(LLA_data_results.DataSets.GetDataSetByName(element).GetValues())
-    
-    for j in range(AER_data_results.DataSets.GetDataSetByName('Access Number').Count):
-        for key, vals in access_data.items():
-            tabla[key].append(vals[j])
-        
-    return tabla
-
 Access = {}  
 tabla = defaultdict(list) 
 new_start_time = 0
@@ -313,28 +202,13 @@ report_name = scenario_metadata["receivers"]["saocom1a_receiver"]["receiver_pare
 ts_name_sc1a = scenario_metadata["receivers"]["saocom1a_receiver"]["link_transmitters"][0]
 dem = scenario_metadata["receivers"]["saocom1a_receiver"]["dem"]
 rs_name = scenario_metadata["receivers"]["saocom1a_receiver"]["name"]
-rs_sat_name = scenario_metadata["receivers"]["saocom1a_receiver"]["receiver_parent"]
+rs_sat_name_sc1a = scenario_metadata["receivers"]["saocom1a_receiver"]["receiver_parent"]
 ts_gs_name = scenario_metadata["receivers"]["saocom1a_receiver"]["link_transmitters"][0]
 ts_an_name = scenario_metadata["receivers"]["saocom1a_receiver"]["link_antennas"][0]
 Access[acces_name_sc1a] = Transmitters[ts_name_sc1a].transmitter.GetAccessToObject(Receivers[rs_name].receptor)
 Access[acces_name_sc1a].ComputeAccess()
 
-access_data = Access[acces_name_sc1a].DataProviders.Item('Access Data')
-access_data_query  = access_data.QueryInterface(STKObjects.IAgDataPrvInterval)
-access_data_results = access_data_query.Exec(scenario2.StartTime, scenario2.StopTime)
-accessStartTime = access_data_results.DataSets.GetDataSetByName('Start Time').GetValues()
-accessStopTime  = access_data_results.DataSets.GetDataSetByName('Stop Time').GetValues()
-duration_1 = access_data_results.DataSets.GetDataSetByName('Duration').GetValues()
-
-new_duration = 0
-longest_duration_idx = 0
-for i, duration in enumerate(duration_1):
-    if i==0:
-        new_duration = duration
-    else:
-        if duration > new_duration:
-            new_duration = duration
-            longest_duration_idx = i
+accessStartTime, accessStopTime, duration_1 = stk_api.get_access_times(Access[acces_name_sc1a], scenario2)
 
 acces_name = scenario_metadata["receivers"]["eve_receiver"]["receiver_parent"] + "_acces_" + scenario_metadata["receivers"]["eve_receiver"]["link_transmitters"][0]
 report_name = scenario_metadata["receivers"]["eve_receiver"]["receiver_parent"] + "_" + scenario_metadata["receivers"]["eve_receiver"]["link_transmitters"][0]
@@ -348,10 +222,39 @@ Access[acces_name].ComputeAccess()
 
 new_start_time, new_stop_time, new_access_times = TimeSync(accessStartTime_1=accessStartTime, accessStopTime_1=accessStopTime,duration_1= duration_1, link=Access[acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, StepTime=StepTime)   
 
+aer_elements = ["Access Number", "Azimuth", "Elevation", "Range"]
+AER_data = stk_api.get_all_access_link_data(Access[acces_name_sc1a], "AER Data", "Default", accessStartTime, accessStopTime, StepTime, aer_elements)
+
+li_elements = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth", "Xmtr Gain", "Xmtr Power", "Rcvd. Iso. Power", "Carrier Power at Rcvr Input"]
+LinkInfo = stk_api.get_all_access_link_data(Access[acces_name_sc1a], "Link Information", 0, accessStartTime, accessStopTime, StepTime, li_elements)
+
+pv_elements = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
+PositionVelocity = stk_api.get_all_access_link_data(Access[acces_name_sc1a], "To Position Velocity", "J2000", accessStartTime, accessStopTime, StepTime, pv_elements)
+
+lla_elements = ["Lat", "Lon", "Alt"]
+LLAState = stk_api.get_all_access_link_data(Satellites[rs_sat_name_sc1a].sat, "LLA State", "Fixed", accessStartTime, accessStopTime, StepTime, lla_elements)
+
+to_join_dict = (AER_data, LinkInfo, PositionVelocity, LLAState)
+tabla =  defaultdict(list) 
+
+for dicts in to_join_dict:
+    for key, vals in dicts.items():
+        tabla[key] = vals
+
+reporte = pd.DataFrame(tabla)
+
+reporte.to_excel("Reports/PruebaAPI"".xlsx")
+obs_table = defaultdict(list)
 
 for i, times in enumerate(new_access_times):
-    obs = stk_api.get_observation(Access[acces_name_sc1a], times, tabla)[1]
+    obs = stk_api.get_instantaneous_link_data(Access[acces_name_sc1a], "To Position Velocity", "J2000", times, pv_elements ,"List")
     print(obs)
+    #for key, vals in obs.items():
+    #    obs_table[key].append(vals[0])
     Antennas[ts_an_name].set_azelorientation(i*4, i*2, 0)
     if i>10:
         break
+
+#obs_reporte = pd.DataFrame(obs_table)
+
+#obs_reporte.to_excel("Reports/PruebaObs"".xlsx")
