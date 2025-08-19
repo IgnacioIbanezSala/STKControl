@@ -2,6 +2,18 @@ from comtypes.gen import STKObjects
 from collections import defaultdict
 
 def get_access_times(link, scenario_I):
+    """
+    Returns lists containing all start times, stop times and durations from all access
+
+    Parameters
+    ----------
+    link : IAgStkAccess
+        Access between two StkObjects
+    
+    scenario_I: IAgScenario Interface
+        The interface of the Stk scenario
+    
+    """
     access_data = link.DataProviders.Item('Access Data')
     access_data_I = access_data.QueryInterface(STKObjects.IAgDataPrvInterval)
     access_data_R = access_data_I.Exec(scenario_I.StartTime, scenario_I.StopTime)
@@ -11,7 +23,25 @@ def get_access_times(link, scenario_I):
 
     return accessStartTimes, accessStopTimes, accessDurations
 
-def get_access_time(link, access_idx, longest, scenario_I):
+def get_access_time(link, access_idx, scenario_I, longest = False):
+    """
+    Returns the start time and stop time of a single access
+
+    Parameters
+    ----------
+    link : IAgStkAccess
+        Access between two StkObjects
+    
+    access_idx: int
+        Index of the access
+    
+    scenario_I: IAgScenario Interface
+        The interface of the Stk scenario
+        
+    longest: Bool
+        If true return the start time and stop time of the longest duration access (default is False)
+             
+    """
     access_data = link.DataProviders.Item('Access Data')
     access_data_I = access_data.QueryInterface(STKObjects.IAgDataPrvInterval)
     access_data_R = access_data_I.Exec(scenario_I.StartTime, scenario_I.StopTime)
@@ -41,6 +71,33 @@ def get_access_time(link, access_idx, longest, scenario_I):
     return accessStartTime, accessStopTime
 
 def get_link_data(link, item, group, start_time, stop_time, step, elements):
+    """
+    Returns a dictionary containing the data corresponding to the elements in a time interval
+
+    Parameters
+    ----------
+    link : IAgStkAccess
+        Access between two StkObjects
+
+    item : String
+        Item whose data will be returned
+
+    group : String
+        Item group in case it has one
+
+    start_time: String
+        start of the time interval
+    
+    stop_time: String
+        stop of the time interval
+
+    step: String
+        definition of the interval
+
+    elements : list
+        list containing the elements of the item whose data will be returned
+    
+    """
     link_data = link.DataProviders.Item(item)
     is_group = link_data.IsGroup()
     if is_group == True:
@@ -63,6 +120,33 @@ def get_link_data(link, item, group, start_time, stop_time, step, elements):
     return link_data
 
 def get_all_access_link_data(link, item, group, start_time, stop_time, step, elements):
+    """
+    Returns a dictionary containing all data corresponding to the elements through all access
+
+    Parameters
+    ----------
+    link : IAgStkAccess
+        Access between two StkObjects
+
+    item : String
+        Item whose data will be returned
+
+    group : String
+        Item group in case it has one
+
+    start_time: list
+        list containing all start times the access
+    
+    stop_time: list
+        list containing all stop times the access
+
+    step: String
+        definition of the interval
+
+    elements : list
+        list containing the elements of the item whose data will be returned
+    
+    """    
     link_data = defaultdict(list)
     current_link_data = defaultdict(list)
     for start, stop in zip(start_time, stop_time):
@@ -73,7 +157,29 @@ def get_all_access_link_data(link, item, group, start_time, stop_time, step, ele
     
     return link_data
 
-def get_instantaneous_link_data(link, item, group, time, elements, format):
+def get_instantaneous_link_data(link, item, group, time, elements, format="Dict"):
+    """
+    Returns a dictionary or list containing data corresponding to the elements at the specified time
+
+    Parameters
+    ----------
+    link : IAgStkAccess
+        Access between two StkObjects
+
+    item : String
+        Item whose data will be returned
+
+    group : String
+        Item group in case it has one
+
+    time: String
+    
+    elements : list
+        list containing the elements of the item whose data will be returned
+    
+    format : String
+        format of the return (default is Dict)
+    """    
     link_data = link.DataProviders.Item(item)
     is_group = link_data.IsGroup()
     if is_group == True:
@@ -98,7 +204,7 @@ def get_instantaneous_link_data(link, item, group, time, elements, format):
         for key, vals in link_current_data.items():
             link_data_list.append(vals[0])
         return link_data_list
-    else:
+    if format == "Dict":
         return link_data
 
 

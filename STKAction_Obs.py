@@ -33,14 +33,14 @@ import STKEntities
 
 
 path_to_tle = "TLE/"
-f_idx = open('Scenarios/Spy_Sat_noantennareceptor.json')
+f_idx = open('Scenarios/Spy_Sat_manualpointing.json')
 scenario_metadata = json.load(f_idx)
 
 ScenarioName    = scenario_metadata["Scenario"]["name"]
 StartTime       = scenario_metadata["time constraints"]["start time"]
 StopTime        = scenario_metadata["time constraints"]["stop time"]
 StepTime        = scenario_metadata["time constraints"]["step"]
-SpyRs           = scenario_metadata["Scenario"]["SpyRs"]
+#SpyRs           = scenario_metadata["Scenario"]["SpyRs"]
 ######################################
 ##    Task 2
 ##    1. Create a new scenario
@@ -80,17 +80,6 @@ for gs in scenario_metadata['ground_stations']:
     alt = scenario_metadata["ground_stations"][gs]["alt"]
     GroundStations[gs_name] = STKEntities.STKGroundStation(root, gs_name, unit, use_terrain, lat, long, alt)
 
-Sensors = {}
-ss_idx = 0
-for ss in scenario_metadata['sensors']:
-    ss_idx += 1
-    ss_name = scenario_metadata["sensors"][ss]["name"]
-    ss_parent = scenario_metadata["sensors"][ss]["sensor_parent"]
-    targets = scenario_metadata["sensors"][ss]["sensor_targets"]
-    Sensors[ss_name] = STKEntities.STKTargetedSensor(ss_name, GroundStations[ss_parent].groundStation, Satellites[targets[0]].sat.Path)
-    for i in range(0, len(targets)):
-        Sensors[ss_name].add_target(Satellites[targets[i]].sat)
-
 Antennas = {}
 an_idx = 0
 for an in scenario_metadata["antennas"]:
@@ -103,11 +92,9 @@ for an in scenario_metadata["antennas"]:
     freq = scenario_metadata["antennas"][an]["freq"]
     Elv = scenario_metadata["antennas"][an]["Elv"]
     sensor_bool = scenario_metadata["antennas"][an]["sensor_bool"]
+    Antennas[an_name] = STKEntities.STKAntenna(an_name, GroundStations[parent_name].groundStation, model, diameter, computer_diameter, freq) 
     if not sensor_bool:
-        Antennas[an_name] = STKEntities.STKAntenna(an_name, Satellites[parent_name].sat, model, diameter, computer_diameter, freq)
-        Antennas[an_name].set_azelorientation(0, Elv, 0)  
-    else:
-        Antennas[an_name] = STKEntities.STKAntenna(an_name, Sensors[parent_name].sensor, model, diameter, computer_diameter, freq)
+        Antennas[an_name].set_azelorientation(0, Elv, 0) 
 
 
 Transmitters = {}
@@ -204,7 +191,7 @@ dem = scenario_metadata["receivers"]["saocom1a_receiver"]["dem"]
 rs_name = scenario_metadata["receivers"]["saocom1a_receiver"]["name"]
 rs_sat_name_sc1a = scenario_metadata["receivers"]["saocom1a_receiver"]["receiver_parent"]
 ts_gs_name = scenario_metadata["receivers"]["saocom1a_receiver"]["link_transmitters"][0]
-ts_an_name = scenario_metadata["receivers"]["saocom1a_receiver"]["link_antennas"][0]
+ts_an_name_sc1a = scenario_metadata["receivers"]["saocom1a_receiver"]["link_antennas"][0]
 Access[acces_name_sc1a] = Transmitters[ts_name_sc1a].transmitter.GetAccessToObject(Receivers[rs_name].receptor)
 Access[acces_name_sc1a].ComputeAccess()
 
@@ -222,6 +209,7 @@ Access[acces_name].ComputeAccess()
 
 new_start_time, new_stop_time, new_access_times = TimeSync(accessStartTime_1=accessStartTime, accessStopTime_1=accessStopTime,duration_1= duration_1, link=Access[acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, StepTime=StepTime)   
 
+"""
 aer_elements = ["Access Number", "Azimuth", "Elevation", "Range"]
 AER_data = stk_api.get_all_access_link_data(Access[acces_name_sc1a], "AER Data", "Default", accessStartTime, accessStopTime, StepTime, aer_elements)
 
@@ -244,17 +232,20 @@ for dicts in to_join_dict:
 reporte = pd.DataFrame(tabla)
 
 reporte.to_excel("Reports/PruebaAPI"".xlsx")
+"""
 obs_table = defaultdict(list)
+pv_elements = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
+li_elements = ["Time", 'C/No', 'Eb/No', "BER", "Range"]
 
 for i, times in enumerate(new_access_times):
-    obs = stk_api.get_instantaneous_link_data(Access[acces_name_sc1a], "To Position Velocity", "J2000", times, pv_elements ,"List")
+    obs = stk_api.get_instantaneous_link_data(Access[acces_name_sc1a], "Link Information", "J2000", times, li_elements ,"Dict")
     print(obs)
-    #for key, vals in obs.items():
-    #    obs_table[key].append(vals[0])
-    Antennas[ts_an_name].set_azelorientation(i*4, i*2, 0)
+    for key, vals in obs.items():
+        obs_table[key].append(vals[0])
+    Antennas[ts_an_name_sc1a].set_azelorientation(90, 90, 0)
     if i>10:
         break
 
-#obs_reporte = pd.DataFrame(obs_table)
+obs_reporte = pd.DataFrame(obs_table)
 
-#obs_reporte.to_excel("Reports/PruebaObs"".xlsx")
+obs_reporte.to_excel("Reports/PruebaObs"".xlsx")
