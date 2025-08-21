@@ -1,5 +1,6 @@
 from comtypes.gen import STKObjects
 from collections import defaultdict
+from datetime import datetime, timedelta
 
 def get_access_times(link, scenario_I):
     """
@@ -69,6 +70,42 @@ def get_access_time(link, access_idx, scenario_I, longest = False):
         accessStopTime = accessStopTimes[access_idx]
 
     return accessStartTime, accessStopTime
+
+def get_access_within_access(accessStartTime_1, accessStopTime_1, link, scenario_I, StepTime):
+
+    access_data = link.DataProviders.Item('Access Data')
+    access_data_query  = access_data.QueryInterface(STKObjects.IAgDataPrvInterval)
+    access_data_results = access_data_query.Exec(scenario_I.StartTime, scenario_I.StopTime)
+    accessStartTime_2 = access_data_results.DataSets.GetDataSetByName('Start Time').GetValues()
+    accessStopTime_2  = access_data_results.DataSets.GetDataSetByName('Stop Time').GetValues()
+
+    new_start_time = 0
+    new_stop_time = 0
+    new_access_times = []
+
+    for start_time, stop_time in zip(accessStartTime_2, accessStopTime_2):
+        if start_time > accessStartTime_1 and start_time<accessStopTime_1:
+            new_start_time = start_time
+        if stop_time < accessStopTime_1:
+            new_stop_time = stop_time
+        if stop_time > accessStopTime_1:
+            new_stop_time = accessStopTime_1
+    
+    
+    step = timedelta(seconds = StepTime)
+    new_start_time = new_start_time[0:20]
+    new_stop_time = new_stop_time[0:20]
+    format_with_time = "%d %b %Y %H:%M:%S"
+    datetime_object = datetime.strptime(new_start_time, format_with_time)
+    datetime_object = datetime_object + step
+    new_time = datetime_object.strftime('%d %b %Y %H:%M:%S.%f')
+    while (new_time < new_stop_time):
+        new_access_times.append(new_time)
+        datetime_object = datetime_object + step
+        new_time = datetime_object.strftime('%d %b %Y %H:%M:%S.%f')
+
+    return new_start_time, new_stop_time, new_access_times
+
 
 def get_link_data(link, item, group, start_time, stop_time, step, elements):
     """

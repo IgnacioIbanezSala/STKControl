@@ -4,7 +4,7 @@ from win32api import GetSystemMetrics
 from comtypes.client import CreateObject
 import pandas as pd
 import json
-from numpy import sqrt
+from numpy import sqrt, power
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Optional
@@ -20,7 +20,7 @@ import Channel
 
 class StkEnv(gym.Env):
     
-    def __init__(self, scenario_file_path = "Scenarios/Spy_Sat_noantennareceptor.json" , size: int = 5):
+    def __init__(self, scenario_file_path = "Scenarios/Spy_Sat_noantennareceptor.json"):
         
         self.scenario_file_path = scenario_file_path
         self.b_b = 0.005
@@ -40,18 +40,18 @@ class StkEnv(gym.Env):
         self.n = 500
 
         ##    2. Get reference to running STK instance
-        uiApplication = CreateObject('STK11.Application')
-        uiApplication.Visible = True
-        uiApplication.UsarControl=True
+        self.uiApplication = CreateObject('STK11.Application')
+        self.uiApplication.Visible = False
+        self.uiApplication.UsarControl=True
 
         ##    3. Get our IAgStkObjectRoot interface
-        root = uiApplication.Personality2
+        self.root = self.uiApplication.Personality2
 
         path_to_tle = "TLE/"
         f_idx = open(scenario_file_path)
         scenario_metadata = json.load(f_idx)
 
-        ScenarioName  = scenario_metadata["Scenario"]["name"]
+        self.ScenarioName  = scenario_metadata["Scenario"]["name"]
         StartTime   = scenario_metadata["time constraints"]["start time"]
         StopTime     = scenario_metadata["time constraints"]["stop time"]
         StepTime      = scenario_metadata["time constraints"]["step"]
@@ -60,8 +60,8 @@ class StkEnv(gym.Env):
         ##    Task 2
         ##    1. Create a new scenario
 
-        root.NewScenario(ScenarioName)
-        scenario      = root.CurrentScenario
+        self.root.NewScenario(self.ScenarioName)
+        scenario      = self.root.CurrentScenario
 
         ##    2. Set the analytical time period.
 
@@ -70,7 +70,7 @@ class StkEnv(gym.Env):
         scenario2.Animation.AnimStepValue = StepTime
 
         ##    3. Reset the animation time.
-        root.Rewind()
+        self.root.Rewind()
 
         # Get the entity parameters from the scenario file and initialize the entities.
         self.Satellites = {}
@@ -80,8 +80,8 @@ class StkEnv(gym.Env):
             sat_name = scenario_metadata["satellites"][sat]["name"]
             sat_scc = scenario_metadata["satellites"][sat]["propagator_params"]["scc"]
             tle_file_path = scenario_metadata["satellites"][sat]["propagator_params"]["tle_file"]
-            self.Satellites[sat_name] = STKEntities.Stk_Satellite(root, sat_name)
-            self.Satellites[sat_name].SetSatellitePropagator_and_BasicAttitude(root, sat_scc, True, tle_file_path, True)
+            self.Satellites[sat_name] = STKEntities.Stk_Satellite(self.root, sat_name)
+            self.Satellites[sat_name].SetSatellitePropagator_and_BasicAttitude(self.root, sat_scc, True, tle_file_path, True)
 
         self.GroundStations = {}
         gs_idx = 0
@@ -93,18 +93,7 @@ class StkEnv(gym.Env):
             lat = scenario_metadata["ground_stations"][gs]["lat"]
             long = scenario_metadata["ground_stations"][gs]["long"]
             alt = scenario_metadata["ground_stations"][gs]["alt"]
-            self.GroundStations[gs_name] = STKEntities.STKGroundStation(root, gs_name, unit, use_terrain, lat, long, alt)
-
-        self.Sensors = {}
-        ss_idx = 0
-        for ss in scenario_metadata['sensors']:
-            ss_idx += 1
-            ss_name = scenario_metadata["sensors"][ss]["name"]
-            ss_parent = scenario_metadata["sensors"][ss]["sensor_parent"]
-            targets = scenario_metadata["sensors"][ss]["sensor_targets"]
-            self.Sensors[ss_name] = STKEntities.STKTargetedSensor(ss_name, self.GroundStations[ss_parent].groundStation, self.Satellites[targets[0]].sat.Path)
-            for i in range(0, len(targets)):
-                self.Sensors[ss_name].add_target(self.Satellites[targets[i]].sat)
+            self.GroundStations[gs_name] = STKEntities.STKGroundStation(self.root, gs_name, unit, use_terrain, lat, long, alt)
 
         self.Antennas = {}
         an_idx = 0
@@ -118,11 +107,9 @@ class StkEnv(gym.Env):
             freq = scenario_metadata["antennas"][an]["freq"]
             Elv = scenario_metadata["antennas"][an]["Elv"]
             sensor_bool = scenario_metadata["antennas"][an]["sensor_bool"]
+            self.Antennas[an_name] = STKEntities.STKAntenna(an_name, self.GroundStations[parent_name].groundStation, model, diameter, computer_diameter, freq) 
             if not sensor_bool:
-                self.Antennas[an_name] = STKEntities.STKAntenna(an_name, self.Satellites[parent_name].sat, model, diameter, computer_diameter, freq)
-                self.Antennas[an_name].set_azelorientation(0, Elv, 0)  
-            else:
-                self.Antennas[an_name] = STKEntities.STKAntenna(an_name, self.Sensors[parent_name].sensor, model, diameter, computer_diameter, freq)
+                self.Antennas[an_name].set_azelorientation(0, Elv, 0) 
 
 
         self.Transmitters = {}
@@ -138,7 +125,7 @@ class StkEnv(gym.Env):
             power = scenario_metadata["transmitters"][ts]["power"]
             data_rate = scenario_metadata["transmitters"][ts]["data_rate"]
             antenna_control = scenario_metadata["transmitters"][ts]["antenna_control"]
-            self.Transmitters[ts_name] = STKEntities.STKTransmitter(root, ts_name, self.GroundStations[parent_name].groundStation, model, dem, auto_scale_bandwidth, freq, power, data_rate, antenna_control)
+            self.Transmitters[ts_name] = STKEntities.STKTransmitter(self.root, ts_name, self.GroundStations[parent_name].groundStation, model, dem, auto_scale_bandwidth, freq, power, data_rate, antenna_control)
 
         self.Receivers = {}
         rs_idx = 0
@@ -153,7 +140,7 @@ class StkEnv(gym.Env):
             self.Receivers[rs_name] = STKEntities.STKReceptor(rs_name, self.Satellites[parent_name].sat, model, auto_select_modulator, dem, antenna_control)
 
 
-        self.Access = {}  
+        self.Access = {}
         
         self.acces_name_sc1a = scenario_metadata["receivers"]["saocom1a_receiver"]["receiver_parent"] + "_acces_" + scenario_metadata["receivers"]["saocom1a_receiver"]["link_transmitters"][0]
         report_name = scenario_metadata["receivers"]["saocom1a_receiver"]["receiver_parent"] + "_" + scenario_metadata["receivers"]["saocom1a_receiver"]["link_transmitters"][0]
@@ -177,17 +164,18 @@ class StkEnv(gym.Env):
         self.Access[self.acces_name] = self.Transmitters[ts_name].transmitter.GetAccessToObject(self.Receivers[rs_name].receptor)
         self.Access[self.acces_name].ComputeAccess()
 
-        self.new_start_time, self.new_stop_time, self.new_access_times = TimeSync(accessStartTime_1=accessStartTime, accessStopTime_1=accessStopTime,duration_1= duration_1, link=self.Access[self.acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, StepTime=StepTime)   
+        longest_access_start_time, longest_access_stop_time = stk_api.get_access_time(self.Access[self.acces_name_sc1a], 0, scenario2, True)
+        self.new_start_time, self.new_stop_time, self.new_access_times = stk_api.get_access_within_access(longest_access_start_time, longest_access_stop_time, self.Access[self.acces_name], scenario2, StepTime)
         eve_channel = Channel.Short_Packed_Channel(self.b_e, self.m_e, self.omega_e, self.beta_e, len(self.new_access_times))
         bob_channel = Channel.Short_Packed_Channel(self.b_b, self.m_b, self.omega_b, self.beta_b, len(self.new_access_times))
-        self.h_t_bob = bob_channel.shadowed_rician(self.new_start_time,self.new_stop_time)
-        self.h_t_eve = eve_channel.shadowed_rician(self.new_start_time,self.new_stop_time)
+        self.h_t_bob = bob_channel.shadowed_rician(0,len(self.new_access_times))[0]
+        self.h_t_eve = eve_channel.shadowed_rician(0,len(self.new_access_times))[0]
 
     def reset(self, seed: Optional[int] = None, options: Optional[dict] = None):
         super().reset(seed=seed)
 
         self.info = {}
-        self.info['step_number'] = 0
+        self.info['step number'] = 0
 
     
     def _get_obs(self, link, time):
@@ -204,23 +192,20 @@ class StkEnv(gym.Env):
     def step(self, action):
 
         current_step = self.info['step number']
-
-        terminated = (current_step == len(self.new_access_times))
-
-        if not terminated:
-            self.Antennas[self.ts_an_name_sc1a].set_azelorientation(action[0], action[1], 0)
-            obs = self._get_obs(self.Access[self.acces_name_sc1a], self.new_access_times[current_step])
-
-            C_No_bob = stk_api.get_instantaneous_link_data(self.Access[self.acces_name_sc1a], "Link Information", 0, self.new_access_times[current_step], ["C/No"], "List")
-            C_No_eve = stk_api.get_instantaneous_link_data(self.Access[self.acces_name], "Link Information", 0, self.new_access_times[current_step], ["C/No"], "List")
-
-            snr_b = C_No_bob * self.h_t_bob[current_step]
-            snr_e = C_No_eve * self.h_t_eve[current_step]
-
-            reward = sr.achievable_secrecy_rate(snr_b, snr_e, self.eb, self.delta, self.n)
+        
+        self.Antennas[self.ts_an_name_sc1a].set_azelorientation(action[0], action[1], 0)
+        obs = self._get_obs(self.Access[self.acces_name_sc1a], self.new_access_times[current_step])
+        C_No_bob = stk_api.get_instantaneous_link_data(self.Access[self.acces_name_sc1a], "Link Information", 0, self.new_access_times[current_step], ["C/No"], "List")
+        C_No_eve = stk_api.get_instantaneous_link_data(self.Access[self.acces_name], "Link Information", 0, self.new_access_times[current_step], ["C/No"], "List")
+        cn_bob = power(10, C_No_bob[0]/10)
+        cn_eve = power(10, C_No_eve[0]/10)
+        snr_b = cn_bob * (abs(self.h_t_bob[current_step]) ** 2) / (1**2)
+        snr_e = cn_eve * (abs(self.h_t_eve[current_step]) ** 2) / (1**2)
+        reward = sr.achievable_secrecy_rate(snr_b, snr_e, self.eb, self.delta, self.n)
 
         truncated = False
 
         self.info['step number'] += 1
+        terminated = (self.info['step number'] == len(self.new_access_times))
 
         return obs, reward, terminated, truncated, self.info

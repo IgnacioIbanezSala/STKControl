@@ -1,1 +1,1 @@
-from STKAPI.STK_API import get_access_times, get_link_data, get_all_access_link_data, get_instantaneous_link_data
+from STKAPI.STK_API import get_access_times, get_access_time, get_access_within_access, get_link_data, get_all_access_link_data, get_instantaneous_link_data

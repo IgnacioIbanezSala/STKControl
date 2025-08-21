@@ -17,7 +17,7 @@ import STKAPI as stk_api
 
 ##    2. Get reference to running STK instance
 uiApplication = CreateObject('STK11.Application')
-uiApplication.Visible = True
+uiApplication.Visible = False
 uiApplication.UsarControl=True
 
 ##    3. Get our IAgStkObjectRoot interface
@@ -207,7 +207,11 @@ ts_gs_name = scenario_metadata["receivers"]["eve_receiver"]["link_transmitters"]
 Access[acces_name] = Transmitters[ts_name].transmitter.GetAccessToObject(Receivers[rs_name].receptor)
 Access[acces_name].ComputeAccess()
 
-new_start_time, new_stop_time, new_access_times = TimeSync(accessStartTime_1=accessStartTime, accessStopTime_1=accessStopTime,duration_1= duration_1, link=Access[acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, StepTime=StepTime)   
+
+longest_access_start_time, longest_access_stop_time = stk_api.get_access_time(Access[acces_name_sc1a], 0, scenario2, True)
+new_start_time, new_stop_time, new_access_times = stk_api.get_access_within_access(longest_access_start_time, longest_access_stop_time, Access[acces_name], scenario2, StepTime)
+        
+#new_start_time, new_stop_time, new_access_times = TimeSync(accessStartTime_1=accessStartTime, accessStopTime_1=accessStopTime,duration_1= duration_1, link=Access[acces_name], StartTime=scenario2.StartTime, StopTime=scenario2.StopTime, StepTime=StepTime)   
 
 """
 aer_elements = ["Access Number", "Azimuth", "Elevation", "Range"]
