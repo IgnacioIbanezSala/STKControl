@@ -177,24 +177,31 @@ class StkEnv(gym.Env):
         self.info = {}
         self.info['step number'] = 0
 
+        obs = self._get_obs(self.Access[self.acces_name_sc1a], self.Access[self.acces_name], self.new_access_times[0]) 
+
+        return obs
     
-    def _get_obs(self, link, time):
+    def _get_obs(self, link, link_2, time):
 
         aer_elements = ["Azimuth", "Elevation", "Range"]
         AER_data = stk_api.get_instantaneous_link_data(link, "AER Data", "Default", time, aer_elements, "List")
+        AER_data_2 = stk_api.get_instantaneous_link_data(link_2, "AER Data", "Default", time, aer_elements, "List")
 
         pv_elements = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
         LinkInfo_data = stk_api.get_instantaneous_link_data(link, "To Position Velocity", "J2000", time, pv_elements ,"List")
+        LinkInfo_data_2 = stk_api.get_instantaneous_link_data(link_2, "To Position Velocity", "J2000", time, pv_elements ,"List")
 
-        obs = AER_data + LinkInfo_data
+        obs = AER_data + LinkInfo_data + AER_data_2 + LinkInfo_data_2
         return obs
     
     def step(self, action):
 
         current_step = self.info['step number']
+        AER_data = stk_api.get_instantaneous_link_data(self.Access[self.acces_name_sc1a], "AER Data", "Default", self.new_access_times[current_step], ["Azimuth", "Elevation"])
+        azimuth = AER_data["Azimuth"][0]
+        elevation = AER_data["Elevation"][0]
         
-        self.Antennas[self.ts_an_name_sc1a].set_azelorientation(action[0], action[1], 0)
-        obs = self._get_obs(self.Access[self.acces_name_sc1a], self.new_access_times[current_step])
+        self.Antennas[self.ts_an_name_sc1a].set_azelorientation(azimuth + action[0], elevation + action[1], 0)
         C_No_bob = stk_api.get_instantaneous_link_data(self.Access[self.acces_name_sc1a], "Link Information", 0, self.new_access_times[current_step], ["C/No"], "List")
         C_No_eve = stk_api.get_instantaneous_link_data(self.Access[self.acces_name], "Link Information", 0, self.new_access_times[current_step], ["C/No"], "List")
         cn_bob = power(10, C_No_bob[0]/10)
@@ -207,5 +214,10 @@ class StkEnv(gym.Env):
 
         self.info['step number'] += 1
         terminated = (self.info['step number'] == len(self.new_access_times))
+
+        if not terminated:
+            obs = self._get_obs(self.Access[self.acces_name_sc1a], self.Access[self.acces_name], self.new_access_times[self.info['step number']]) 
+        else:
+            obs = 0
 
         return obs, reward, terminated, truncated, self.info

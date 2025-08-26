@@ -15,7 +15,7 @@ from collections import defaultdict
 
 ##    2. Get reference to running STK instance
 uiApplication = CreateObject('STK11.Application')
-uiApplication.Visible = True
+uiApplication.Visible = False
 uiApplication.UsarControl=True
 
 ##    3. Get our IAgStkObjectRoot interface

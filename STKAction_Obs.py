@@ -132,51 +132,7 @@ root.SaveScenario()
 ##    Task 3
 ##    2. Retrive and view the altitud of the satellite during an access interval.
 
-def TimeSync(accessStartTime_1, accessStopTime_1, duration_1, link, StartTime, StopTime, StepTime):
 
-    access_data = link.DataProviders.Item('Access Data')
-    access_data_query  = access_data.QueryInterface(STKObjects.IAgDataPrvInterval)
-    access_data_results = access_data_query.Exec(StartTime, StopTime)
-    accessStartTime_2 = access_data_results.DataSets.GetDataSetByName('Start Time').GetValues()
-    accessStopTime_2  = access_data_results.DataSets.GetDataSetByName('Stop Time').GetValues()
-
-    new_duration = 0
-    longest_duration_idx = 0
-    for i, duration in enumerate(duration_1):
-        if i==0:
-            new_duration = duration
-        else:
-            if duration > new_duration:
-                new_duration = duration
-                longest_duration_idx = i
-
-    new_start_time = 0
-    new_stop_time = 0
-    new_access_times = []
-
-    for start_time, stop_time in zip(accessStartTime_2, accessStopTime_2):
-        if start_time > accessStartTime_1[longest_duration_idx] and start_time<accessStopTime_1[longest_duration_idx]:
-            new_start_time = start_time
-        if stop_time < accessStopTime_1[longest_duration_idx]:
-            new_stop_time = stop_time
-        if stop_time > accessStopTime_1[longest_duration_idx]:
-            new_stop_time = accessStopTime_1[longest_duration_idx]
-    
-    
-    step = timedelta(seconds = StepTime)
-    new_start_time = new_start_time[0:20]
-    new_stop_time = new_stop_time[0:20]
-    format_with_time = "%d %b %Y %H:%M:%S"
-    datetime_object = datetime.strptime(new_start_time, format_with_time)
-    datetime_object = datetime_object + step
-    new_time = datetime_object.strftime('%d %b %Y %H:%M:%S.%f')
-    while (new_time < new_stop_time):
-        new_access_times.append(new_time)
-        datetime_object = datetime_object + step
-        new_time = datetime_object.strftime('%d %b %Y %H:%M:%S.%f')
-
-    return new_start_time, new_stop_time, new_access_times
-    
     
 Access = {}  
 tabla = defaultdict(list) 

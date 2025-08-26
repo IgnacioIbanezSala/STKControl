@@ -3,7 +3,7 @@ import pandas as pd
 import envs
 
 #env = gym.make("STKEnv-v0", scenario_filename = "C:/Users/isnac/OneDrive/Escritorio/Programas/Python/STKControl/Scenarios/Spy_Sat_manualpointing.json")
-env = envs.StkEnv("C:/Users/isnac/OneDrive/Escritorio/Programas/Python/STKControl/Scenarios/Spy_Sat_manualpointing.json")
+env = envs.StkEnv("C:/Users/Usuario/OneDrive/Escritorio/Programas/STKControl/Scenarios/Spy_Sat_manualpointing.json")
 
 env.reset()
 
@@ -21,3 +21,4 @@ for a1, a2 in zip(action1, action2):
     print(obs)
     if terminated:
         break
+env.reset()

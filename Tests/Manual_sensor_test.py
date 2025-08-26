@@ -4,8 +4,6 @@ from scipy import stats
 from math import log2, log, sqrt
 import matplotlib.pyplot as plt
 import pandas as pd
-import Channel
-import Secrecy_Rates as sr
 
 
 df_sc1a = pd.read_excel("Reports/SAOCOM1A_transmitterCBA.xlsx")
@@ -18,17 +16,22 @@ C_no_sensor = []
 C_no_no_sensor = []
 Eb_no_sensor = []
 Eb_no_no_sensor = []
+diff = []
 for i in range(span):
     
     idx_sc1a = df_sc1a.index[df_sc1a["Time"] == df_sc1a_manual.at[i, "Time"]]
     if idx_sc1a.empty:
         pass
     else:
+        print(df_sc1a_manual.at[i, "Time"])
+        diff = df_sc1a.loc[idx_sc1a]["C/No"] - df_sc1a_manual.loc[i]["C/No"]
+        print(diff)
         C_no_sensor.append(df_sc1a.loc[idx_sc1a]["C/No"])
         C_no_no_sensor.append(df_sc1a_manual.loc[i]["C/No"])
         Eb_no_sensor.append(df_sc1a.loc[idx_sc1a]["Eb/No"])
         Eb_no_no_sensor.append(df_sc1a_manual.loc[i]["Eb/No"])
-        error.append((df_sc1a.loc[idx_sc1a]["C/No"]-df_sc1a_manual.loc[i]["C/No"]))
+        error.append(diff)
+    
                 
 error_graph = plt.subplots(1,1)[1]
 error_graph.plot(error)

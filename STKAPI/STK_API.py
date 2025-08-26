@@ -72,7 +72,9 @@ def get_access_time(link, access_idx, scenario_I, longest = False):
     return accessStartTime, accessStopTime
 
 def get_access_within_access(accessStartTime_1, accessStopTime_1, link, scenario_I, StepTime):
-
+    """
+    Return two new access
+    """
     access_data = link.DataProviders.Item('Access Data')
     access_data_query  = access_data.QueryInterface(STKObjects.IAgDataPrvInterval)
     access_data_results = access_data_query.Exec(scenario_I.StartTime, scenario_I.StopTime)
