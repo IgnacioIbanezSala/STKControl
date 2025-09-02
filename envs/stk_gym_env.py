@@ -176,22 +176,51 @@ class StkEnv(gym.Env):
 
         self.info = {}
         self.info['step number'] = 0
+        self.info['bob_obs_table'] = defaultdict(list)
+        self.info['eve_obs_table'] = defaultdict(list)
 
         obs = self._get_obs(self.Access[self.acces_name_sc1a], self.Access[self.acces_name], self.new_access_times[0]) 
 
         return obs
     
     def _get_obs(self, link, link_2, time):
-
-        aer_elements = ["Azimuth", "Elevation", "Range"]
-        AER_data = stk_api.get_instantaneous_link_data(link, "AER Data", "Default", time, aer_elements, "List")
-        AER_data_2 = stk_api.get_instantaneous_link_data(link_2, "AER Data", "Default", time, aer_elements, "List")
-
+        
+        aer_elements = ["Access Number", "Azimuth", "Elevation"]
+                
+        li_elements = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth", "Xmtr Gain", "Xmtr Power", "Rcvd. Iso. Power", "Carrier Power at Rcvr Input"]
+        
         pv_elements = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
-        LinkInfo_data = stk_api.get_instantaneous_link_data(link, "To Position Velocity", "J2000", time, pv_elements ,"List")
-        LinkInfo_data_2 = stk_api.get_instantaneous_link_data(link_2, "To Position Velocity", "J2000", time, pv_elements ,"List")
+        
+        obs = []
 
-        obs = AER_data + LinkInfo_data + AER_data_2 + LinkInfo_data_2
+        AER_data = stk_api.get_instantaneous_link_data(link, "AER Data", "Default", time, aer_elements)
+        AER_data_2 = stk_api.get_instantaneous_link_data(link_2, "AER Data", "Default", time, aer_elements)
+
+        LinkInfo_data = stk_api.get_instantaneous_link_data(link, "Link Information", 0, time, li_elements)
+        LinkInfo_data_2 = stk_api.get_instantaneous_link_data(link_2, "Link Information", 0, time, li_elements)
+
+        PositionVelocity = stk_api.get_instantaneous_link_data(link, "To Position Velocity", "J2000", time, pv_elements)
+        PositionVelocity_2 = stk_api.get_instantaneous_link_data(link_2, "To Position Velocity", "J2000", time, pv_elements)
+
+        to_join_dict_1 = (AER_data, LinkInfo_data, PositionVelocity)
+        to_join_dict_2 = (AER_data_2, LinkInfo_data_2, PositionVelocity_2)
+        
+        for dicts in to_join_dict_1:
+            for key, vals in dicts.items():
+                self.info['bob_obs_table'][key].append(vals[0])
+
+        for dicts in to_join_dict_2:
+            for key, vals in dicts.items():
+                self.info['eve_obs_table'][key].append(vals[0])                
+        
+        for dicts in to_join_dict_1:
+            for key, vals in dicts.items():
+                obs.append(vals[0])
+
+        for dicts in to_join_dict_2:
+            for key, vals in dicts.items():
+                obs.append(vals[0])
+        
         return obs
     
     def step(self, action):

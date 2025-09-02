@@ -195,7 +195,7 @@ for rec in scenario_metadata["receivers"]:
                     AER_data = stk_api.get_instantaneous_link_data(Access[acces_name], "AER Data", "Default", times, aer_elements)
                     LinkInfo = stk_api.get_instantaneous_link_data(Access[acces_name], "Link Information", 0, times, li_elements)
                     PositionVelocity = stk_api.get_instantaneous_link_data(Access[acces_name], "To Position Velocity", "J2000", times, pv_elements)
-                    #LLAState = stk_api.get_instantaneous_link_data(Satellites[rs_sat_name].sat, "LLA State", "Fixed", times, lla_elements)
+                    LLAState = stk_api.get_instantaneous_link_data(Satellites[rs_sat_name].sat, "LLA State", "Fixed", times, lla_elements)
 
 
                     to_join_dict = (AER_data, LinkInfo, PositionVelocity)
