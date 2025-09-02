@@ -168,7 +168,7 @@ for rec in scenario_metadata["receivers"]:
                     datetime_object = datetime_object + step
                     new_time = datetime_object.strftime('%d %b %Y %H:%M:%S.%f')
 
-                aer_elements = ["Access Number", "Azimuth", "Elevation", "Range"]
+                aer_elements = ["Access Number", "Azimuth", "Elevation"]
                 
                 li_elements = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth", "Xmtr Gain", "Xmtr Power", "Rcvd. Iso. Power", "Carrier Power at Rcvr Input"]
                 
@@ -181,23 +181,29 @@ for rec in scenario_metadata["receivers"]:
                 for times in new_access_times:
 
                      
-                    AER_data = stk_api.get_instantaneous_link_data(Access[acces_name], "AER Data", "Default", times, ["Azimuth", "Elevation"])
+                    AER_data = stk_api.get_instantaneous_link_data(Access[acces_name], "AER Data", "Default", times, ["Elevation", "Azimuth"])
                     
                     azimuth = AER_data["Azimuth"][0]
-                    elevation = AER_data["Elevation"][0]     
+                    elevation = AER_data["Elevation"][0] 
+                    
+                    #elevation = (elevation) + 0.0937
+                    
+                    print(azimuth, elevation)    
 
-                    Antennas[ts_an_name].set_azelorientation(azimuth,(elevation+0.0937),0)               
+                    Antennas[ts_an_name].set_azelorientation(azimuth,elevation,0)               
                     
                     AER_data = stk_api.get_instantaneous_link_data(Access[acces_name], "AER Data", "Default", times, aer_elements)
                     LinkInfo = stk_api.get_instantaneous_link_data(Access[acces_name], "Link Information", 0, times, li_elements)
                     PositionVelocity = stk_api.get_instantaneous_link_data(Access[acces_name], "To Position Velocity", "J2000", times, pv_elements)
-                    LLAState = stk_api.get_instantaneous_link_data(Satellites[rs_sat_name].sat, "LLA State", "Fixed", times, lla_elements)
+                    #LLAState = stk_api.get_instantaneous_link_data(Satellites[rs_sat_name].sat, "LLA State", "Fixed", times, lla_elements)
 
 
-                    to_join_dict = (AER_data, LinkInfo, PositionVelocity, LLAState)
+                    to_join_dict = (AER_data, LinkInfo, PositionVelocity)
 
-                    for key, vals in LinkInfo.items():
-                        tabla[key].append(vals[0])
+                    for dicts in to_join_dict:
+                        for key, vals in dicts.items():
+                            tabla[key].append(vals[0])
+                            #print(key, " lenght: ", len(tabla[key]))
  
                 reporte = pd.DataFrame(tabla)
                 reporte.to_excel("Reports/" + report_name+".xlsx")

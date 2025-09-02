@@ -15,7 +15,7 @@ def achievable_secrecy_rate(SNR_a, SNR_b, eb, delta, n):
   Ve = (1/(log(2)**2)) * (SNR_b**2 + 2*SNR_b)/((1 + SNR_b)**2)
   #Instantaneous achievable secrecy rate
   Rs = Cs - sqrt(Vb/n) * inv_Q(eb) - sqrt(Ve/n) * inv_Q(delta)
-  return Rs, Cs
+  return max(Rs, 0), Cs
 
 def achievable_secrecy_rate_lower_bound(b_i, m_i, omega_i, Pa, G_a, G_i, L_i, mean_SNR_a, mean_SNR_b, scale, eb, delta, n):
   phi_b = 0.5772/4 + np.log(2)/4 + np.log(b_i)/4 + (1/4) * np.power(((2*b_i*m_i)/(2*b_i*m_i+omega_i)), m_i) * special.hyp2f1(1, m_i, 1, (omega_i)/(2*b_i*(2*b_i*m_i+omega_i)))
