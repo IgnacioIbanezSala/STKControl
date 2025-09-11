@@ -173,7 +173,7 @@ class StkEnv(gym.Env):
         bob_channel = Channel.Short_Packed_Channel(self.b_b, self.m_b, self.omega_b, self.beta_b, len(self.new_access_times))
         self.h_t_bob = bob_channel.shadowed_rician(0,len(self.new_access_times))[0]
         self.h_t_eve = eve_channel.shadowed_rician(0,len(self.new_access_times))[0]
-
+    
     def reset(self, seed: Optional[int] = None, options: Optional[dict] = None):
         super().reset(seed=seed)
 
@@ -186,6 +186,34 @@ class StkEnv(gym.Env):
 
         return obs
     
+    def log_table(self, link, link_2, time):
+        aer_elements = ["Access Number", "Azimuth", "Elevation"]
+                
+        li_elements = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth", "Xmtr Gain", "Xmtr Power", "Rcvd. Iso. Power", "Carrier Power at Rcvr Input"]
+        
+        pv_elements = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
+
+        AER_data = stk_api.get_instantaneous_link_data(link, "AER Data", "Default", time, aer_elements)
+        AER_data_2 = stk_api.get_instantaneous_link_data(link_2, "AER Data", "Default", time, aer_elements)
+
+        LinkInfo_data = stk_api.get_instantaneous_link_data(link, "Link Information", 0, time, li_elements)
+        LinkInfo_data_2 = stk_api.get_instantaneous_link_data(link_2, "Link Information", 0, time, li_elements)
+
+        PositionVelocity = stk_api.get_instantaneous_link_data(link, "To Position Velocity", "J2000", time, pv_elements)
+        PositionVelocity_2 = stk_api.get_instantaneous_link_data(link_2, "To Position Velocity", "J2000", time, pv_elements)
+
+        to_join_dict_1 = (AER_data, LinkInfo_data, PositionVelocity)
+        to_join_dict_2 = (AER_data_2, LinkInfo_data_2, PositionVelocity_2)
+        
+        for dicts in to_join_dict_1:
+            for key, vals in dicts.items():
+                self.info['bob_obs_table'][key].append(vals[0])        
+
+        for dicts in to_join_dict_2:
+            for key, vals in dicts.items():
+                self.info['eve_obs_table'][key].append(vals[0])  
+
+
     def _get_obs(self, link, link_2, time):
         
         aer_elements = ["Access Number", "Azimuth", "Elevation"]
@@ -238,6 +266,9 @@ class StkEnv(gym.Env):
         elevation = AER_data["Elevation"][0]
         
         self.Antennas[self.ts_an_name_sc1a].set_azelorientation(azimuth + action[0], elevation + action[1], 0)
+
+        self.log_table(self.Access[self.acces_name_sc1a], self.Access[self.acces_name], self.new_access_times[current_step])
+
         C_No_bob = stk_api.get_instantaneous_link_data(self.Access[self.acces_name_sc1a], "Link Information", 0, self.new_access_times[current_step], ["C/No"], "List")
         C_No_eve = stk_api.get_instantaneous_link_data(self.Access[self.acces_name], "Link Information", 0, self.new_access_times[current_step], ["C/No"], "List")
         cn_bob = power(10, C_No_bob[0]/10)
