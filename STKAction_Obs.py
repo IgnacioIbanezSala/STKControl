@@ -200,8 +200,11 @@ li_elements = ["Time", 'C/No', 'Eb/No', "BER", "Range"]
 for i, times in enumerate(new_access_times):
     obs = stk_api.get_instantaneous_link_data(Access[acces_name_sc1a], "Link Information", "J2000", times, li_elements ,"Dict")
     print(obs)
+    orientation = Antennas[ts_an_name_sc1a].get_azelorientation()
     for key, vals in obs.items():
         obs_table[key].append(vals[0])
+    obs_table['Antenna Azimuth'].append(orientation[0])
+    obs_table['Antenna Elevation'].append(orientation[1])    
     Antennas[ts_an_name_sc1a].set_azelorientation(90, 90, 0)
     if i>10:
         break

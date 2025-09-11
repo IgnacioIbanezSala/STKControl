@@ -15,3 +15,6 @@ class STKAntenna():
         
     def set_azelorientation(self, az, elv, boresight_rotate):
         self.antennaOrientation.AssignAzEl(az, elv, boresight_rotate)
+
+    def get_azelorientation(self):
+        return self.antennaOrientation.QueryAzEl()

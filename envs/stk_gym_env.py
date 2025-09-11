@@ -1,4 +1,5 @@
 import gymnasium as gym
+from gymnasium import spaces
 
 from win32api import GetSystemMetrics
 from comtypes.client import CreateObject
@@ -22,6 +23,8 @@ class StkEnv(gym.Env):
     
     def __init__(self, scenario_file_path = "Scenarios/Spy_Sat_noantennareceptor.json"):
         
+        self.action_space = spaces.Box(-1, 1, (2,))
+
         self.scenario_file_path = scenario_file_path
         self.b_b = 0.005
         self.m_b = 26
@@ -205,6 +208,8 @@ class StkEnv(gym.Env):
         to_join_dict_1 = (AER_data, LinkInfo_data, PositionVelocity)
         to_join_dict_2 = (AER_data_2, LinkInfo_data_2, PositionVelocity_2)
         
+        obs_space = ['Azimuth', 'Elevation', 'C/No', 'Range', 'x', 'y', 'z']
+
         for dicts in to_join_dict_1:
             for key, vals in dicts.items():
                 self.info['bob_obs_table'][key].append(vals[0])
@@ -215,12 +220,14 @@ class StkEnv(gym.Env):
         
         for dicts in to_join_dict_1:
             for key, vals in dicts.items():
-                obs.append(vals[0])
+                if key in obs_space:
+                    obs.append(vals[0])
 
         for dicts in to_join_dict_2:
             for key, vals in dicts.items():
-                obs.append(vals[0])
-        
+                if key in obs_space:
+                    obs.append(vals[0])
+
         return obs
     
     def step(self, action):
