@@ -270,7 +270,7 @@ class StkEnv(gym.Env):
             new_azimuth +=360
 
 
-        self.Antennas[self.ts_an_name_sc1a].set_azelorientation(azimuth + action[0], elevation + action[1], 0)
+        self.Antennas[self.ts_an_name_sc1a].set_azelorientation(new_azimuth, new_elevation, 0)
 
         self.log_table(self.Access[self.acces_name_sc1a], self.Access[self.acces_name], self.new_access_times[current_step])
                                                                                                                                 
