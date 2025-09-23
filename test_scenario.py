@@ -18,7 +18,7 @@ truncated = terminated = False
 
 i = 0
 for a1, a2 in zip(action1, action2):
-    obs, reward, terminated, truncated, info = env.step([0,0])
+    obs, reward, terminated, truncated, info = env.step([1,0])
     print(obs)
     i += 1
     if terminated or i == 25:
