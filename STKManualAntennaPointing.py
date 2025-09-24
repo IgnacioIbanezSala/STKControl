@@ -13,6 +13,7 @@ import json
 from numpy import sqrt
 from collections import defaultdict
 from datetime import datetime, timedelta
+import sys
 
 ##    2. Get reference to running STK instance
 uiApplication = CreateObject('STK11.Application')
@@ -58,7 +59,7 @@ scenario2.Animation.AnimStepValue = StepTime
 
 ##    3. Reset the animation time.
 root.Rewind()
-        
+
 # Get the entity parameters from the scenario file and initialize the entities.
 Satellites = {}
 sat_idx = 0
@@ -129,7 +130,53 @@ for rs in scenario_metadata['receivers']:
 ##    Task 3
 ##    2. Retrive and view the altitud of the satellite during an access interval.
 
-            
+sat_list = []
+allowed_inputs = []
+sat_names = []
+satellites_to_log = []
+i = 1
+for key, vals in Satellites.items():
+    menu_option = str(i) + "\t-\t" + key
+    sat_list.append(menu_option)
+    allowed_inputs.append(i)
+    sat_names.append(key)
+    i += 1
+
+
+print("Select Satellite for manual tracking from the following options: ")
+for i, val in enumerate(sat_list):
+    print(val)
+while(True):
+    choice = input()
+    choice = int(choice)
+    if choice in allowed_inputs:
+        choice -= 1
+        target_sat_name = sat_names[choice]
+        break
+
+print(target_sat_name)
+
+sat_list.append("Input 0 to continue")
+
+print("To generate log tables select Satellites from the following options: ")
+for i, val in enumerate(sat_list):
+    print(val)
+while(True):
+    choice = input()
+    choice = int(choice)
+    if choice == 0:
+        break
+    if choice in allowed_inputs:
+        choice -= 1
+        satellites_to_log.append(sat_names[choice])
+    
+
+
+print(satellites_to_log)
+
+
+
+
 Access = {}    
 tabla = defaultdict(list)
 access_times = []
@@ -142,76 +189,71 @@ current_size = 1000
 
 for rec in scenario_metadata["receivers"]:
     if scenario_metadata["receivers"][rec]["link_bool"] == True:
-        for ts in range(len(scenario_metadata["receivers"][rec]["link_transmitters"])):
-            acces_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_acces_" + scenario_metadata["receivers"][rec]["link_transmitters"][ts]
-            report_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_" + scenario_metadata["receivers"][rec]["link_transmitters"][ts] + "manual_antena_pointing"
-            ts_name = scenario_metadata["receivers"][rec]["link_transmitters"][ts]
-            rs_name = scenario_metadata["receivers"][rec]["name"]
-            rs_sat_name = scenario_metadata["receivers"][rec]["receiver_parent"]
-            ts_an_name = scenario_metadata["receivers"][rec]["link_antennas"][ts]
-            if rs_sat_name == 'SAOCOM1A':
-                Access[acces_name] = Transmitters[ts_name].transmitter.GetAccessToObject(Receivers[rs_name].receptor)
-                Access[acces_name].ComputeAccess()
-                
-                new_access_times = []
-                longest_access_start_time, longest_access_stop_time = stk_api.get_access_time(Access[acces_name], 0, scenario2, True)
-                
-                step = timedelta(seconds = StepTime)
-                new_start_time = longest_access_start_time[0:20]
-                new_stop_time = longest_access_stop_time[0:20]
-                format_with_time = "%d %b %Y %H:%M:%S"
-                datetime_object = datetime.strptime(new_start_time, format_with_time)
-                datetime_object = datetime_object + step
-                new_time = datetime_object.strftime('%d %b %Y %H:%M:%S.%f')
-                while (new_time < new_stop_time):
-                    new_access_times.append(new_time)
-                    datetime_object = datetime_object + step
-                    new_time = datetime_object.strftime('%d %b %Y %H:%M:%S.%f')
-
-                aer_elements = ["Access Number", "Azimuth", "Elevation"]
-                
-                li_elements = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth", "Xmtr Gain", "Xmtr Power", "Rcvd. Iso. Power", "Carrier Power at Rcvr Input"]
-                
-                pv_elements = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
-                
-                lla_elements = ["Lat", "Lon", "Alt"]
-                
-                tabla =  defaultdict(list)
-                 
-                for times in new_access_times:
-
-                     
-                    AER_data = stk_api.get_instantaneous_link_data(Access[acces_name], "AER Data", "NorthEastDown", times, ["Elevation", "Azimuth"])
-                    
-                    azimuth = AER_data["Azimuth"][0]
-                    elevation = AER_data["Elevation"][0] 
-                    
-                    elevation = (elevation) + 0.0937
-                    
-                    print(azimuth, elevation)    
-
-                    Antennas[ts_an_name].set_azelorientation(azimuth,elevation,0)               
-                    
-                    AER_data = stk_api.get_instantaneous_link_data(Access[acces_name], "AER Data", "NorthEastDown", times, aer_elements)
-                    LinkInfo = stk_api.get_instantaneous_link_data(Access[acces_name], "Link Information", 0, times, li_elements)
-                    PositionVelocity = stk_api.get_instantaneous_link_data(Access[acces_name], "To Position Velocity", "J2000", times, pv_elements)
-                    LLAState = stk_api.get_instantaneous_link_data(Satellites[rs_sat_name].sat, "LLA State", "Fixed", times, lla_elements)
-
-                    orientation = Antennas[ts_an_name].get_azelorientation()    
-
-                    to_join_dict = (AER_data, LinkInfo, PositionVelocity)
-
-                    for dicts in to_join_dict:
-                        for key, vals in dicts.items():
-                            tabla[key].append(vals[0])
-                            #print(key, " lenght: ", len(tabla[key]))
-                    tabla['Antenna Azimuth'].append(orientation[0])
-                    tabla['Antenna Elevation'].append(orientation[1])  
-
-
-                reporte = pd.DataFrame(tabla)
-                reporte.to_excel("Reports/" + report_name+".xlsx")
-                reporte.to_csv("Reports/" + report_name+".csv")
+        acces_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_acces_" + scenario_metadata["receivers"][rec]["link_transmitters"][0]
+        report_name = scenario_metadata["receivers"][rec]["receiver_parent"] + "_" + scenario_metadata["receivers"][rec]["link_transmitters"][0] + "manual_antena_pointing"
+        ts_name = scenario_metadata["receivers"][rec]["link_transmitters"][0]
+        rs_name = scenario_metadata["receivers"][rec]["name"]
+        rs_sat_name = scenario_metadata["receivers"][rec]["receiver_parent"]
+        ts_an_name = scenario_metadata["receivers"][rec]["link_antennas"][0]
+        if rs_sat_name == target_sat_name:
+            Access[acces_name] = Transmitters[ts_name].transmitter.GetAccessToObject(Receivers[rs_name].receptor)
+            Access[acces_name].ComputeAccess()
             
+            new_access_times = []
+            longest_access_start_time, longest_access_stop_time = stk_api.get_access_time(Access[acces_name], 0, scenario2, True)
+            for spy_rec in scenario_metadata["receivers"]:
+                rs_sat_name = scenario_metadata["receivers"][spy_rec]["receiver_parent"]
+                if rs_sat_name in satellites_to_log:
+                    print(rs_sat_name)
+                    spy_acces_name = scenario_metadata["receivers"][spy_rec]["receiver_parent"] + "_acces_" + scenario_metadata["receivers"][spy_rec]["link_transmitters"][0]
+                    spy_report_name = scenario_metadata["receivers"][spy_rec]["receiver_parent"] + "_" + scenario_metadata["receivers"][spy_rec]["link_transmitters"][0] + "manual_antena_pointing"
+                    spy_ts_name = scenario_metadata["receivers"][spy_rec]["link_transmitters"][0]
+                    spy_rs_name = scenario_metadata["receivers"][spy_rec]["name"]
+                    spy_ts_an_name = scenario_metadata["receivers"][spy_rec]["link_antennas"][0]                        
+                    Access[spy_acces_name] = Transmitters[spy_ts_name].transmitter.GetAccessToObject(Receivers[spy_rs_name].receptor)
+                    Access[spy_acces_name].ComputeAccess()
+            new_start_time, new_stop_time, new_access_times = stk_api.get_access_within_access(longest_access_start_time, longest_access_stop_time, Access[spy_acces_name], scenario2, StepTime)
+            aer_elements = ["Access Number", "Azimuth", "Elevation"]
+            
+            li_elements = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth", "Xmtr Gain", "Xmtr Power", "Rcvd. Iso. Power", "Carrier Power at Rcvr Input"]
+            
+            pv_elements = ["x", "y", "z", "xVel", "yVel", "zVel", "RelSpeed"]
+            
+            lla_elements = ["Lat", "Lon", "Alt"]
+            
+            tabla =  defaultdict(lambda: defaultdict(list))
+             
+            for times in new_access_times:
+                 
+                AER_data = stk_api.get_instantaneous_link_data(Access[acces_name], "AER Data", "NorthEastDown", times, ["Elevation", "Azimuth"])
+                
+                azimuth = AER_data["Azimuth"][0]
+                elevation = AER_data["Elevation"][0] 
+                
+                elevation = (elevation) + 0.0937
+                
+                print(azimuth, elevation)    
+                Antennas[ts_an_name].set_azelorientation(azimuth,elevation,0)               
+                
+                for key, access in Access.items():
+                    AER_data = stk_api.get_instantaneous_link_data(access, "AER Data", "NorthEastDown", times, aer_elements)
+                    LinkInfo = stk_api.get_instantaneous_link_data(access, "Link Information", 0, times, li_elements)
+                    PositionVelocity = stk_api.get_instantaneous_link_data(access, "To Position Velocity", "J2000", times, pv_elements)
+                    LLAState = stk_api.get_instantaneous_link_data(Satellites[rs_sat_name].sat, "LLA State", "Fixed", times, lla_elements)
+                    orientation = Antennas[ts_an_name].get_azelorientation()    
+                    to_join_dict = (AER_data, LinkInfo, PositionVelocity)
+                    
+                    for dicts in to_join_dict:
+                        for key_dict, vals in dicts.items():
+                            tabla[key][key_dict].append(vals[0])
+
+                    tabla[key]['Antenna Azimuth'].append(orientation[0])
+                    tabla[key]['Antenna Elevation'].append(orientation[1])
+
+            for key, tabla in tabla.items():
+                reporte = pd.DataFrame(tabla)
+                reporte.to_excel("Reports/" + key + "manual_antena_pointing.xlsx")
+                reporte.to_csv("Reports/" + key + "manual_antena_pointing.csv")
+        
 
 
