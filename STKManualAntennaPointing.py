@@ -156,6 +156,19 @@ while(True):
 
 print(target_sat_name)
 
+print("Select wich Satellite is considered the Spy: ")
+for i, val in enumerate(sat_list):
+    print(val)
+while(True):
+    choice = input()
+    choice = int(choice)
+    if choice in allowed_inputs:
+        choice -= 1
+        spy_sat_name = sat_names[choice]
+        break
+
+print(spy_sat_name)
+
 sat_list.append("Input 0 to continue")
 
 print("To generate log tables select Satellites from the following options: ")
@@ -203,7 +216,7 @@ for rec in scenario_metadata["receivers"]:
             longest_access_start_time, longest_access_stop_time = stk_api.get_access_time(Access[acces_name], 0, scenario2, True)
             for spy_rec in scenario_metadata["receivers"]:
                 rs_sat_name = scenario_metadata["receivers"][spy_rec]["receiver_parent"]
-                if rs_sat_name in satellites_to_log:
+                if rs_sat_name == spy_sat_name:
                     print(rs_sat_name)
                     spy_acces_name = scenario_metadata["receivers"][spy_rec]["receiver_parent"] + "_acces_" + scenario_metadata["receivers"][spy_rec]["link_transmitters"][0]
                     spy_report_name = scenario_metadata["receivers"][spy_rec]["receiver_parent"] + "_" + scenario_metadata["receivers"][spy_rec]["link_transmitters"][0] + "manual_antena_pointing"
@@ -212,7 +225,9 @@ for rec in scenario_metadata["receivers"]:
                     spy_ts_an_name = scenario_metadata["receivers"][spy_rec]["link_antennas"][0]                        
                     Access[spy_acces_name] = Transmitters[spy_ts_name].transmitter.GetAccessToObject(Receivers[spy_rs_name].receptor)
                     Access[spy_acces_name].ComputeAccess()
-            new_start_time, new_stop_time, new_access_times = stk_api.get_access_within_access(longest_access_start_time, longest_access_stop_time, Access[spy_acces_name], scenario2, StepTime)
+                    new_start_time, new_stop_time, new_access_times = stk_api.get_access_within_access(longest_access_start_time, longest_access_stop_time, Access[spy_acces_name], scenario2, StepTime)
+            
+            
             aer_elements = ["Access Number", "Azimuth", "Elevation"]
             
             li_elements = ["Time", 'C/No', 'Eb/No', "BER", "Range", "EIRP", "Free Space Loss", "Xmtr Elevation", "Xmtr Azimuth", "Xmtr Gain", "Xmtr Power", "Rcvd. Iso. Power", "Carrier Power at Rcvr Input"]
@@ -230,7 +245,7 @@ for rec in scenario_metadata["receivers"]:
                 azimuth = AER_data["Azimuth"][0]
                 elevation = AER_data["Elevation"][0] 
                 
-                elevation = (elevation) + 0.0937
+                elevation = (elevation) 
                 
                 print(azimuth, elevation)    
                 Antennas[ts_an_name].set_azelorientation(azimuth,elevation,0)               
@@ -241,7 +256,7 @@ for rec in scenario_metadata["receivers"]:
                     PositionVelocity = stk_api.get_instantaneous_link_data(access, "To Position Velocity", "J2000", times, pv_elements)
                     LLAState = stk_api.get_instantaneous_link_data(Satellites[rs_sat_name].sat, "LLA State", "Fixed", times, lla_elements)
                     orientation = Antennas[ts_an_name].get_azelorientation()    
-                    to_join_dict = (AER_data, LinkInfo, PositionVelocity)
+                    to_join_dict = (AER_data, LinkInfo, PositionVelocity, LLAState)
                     
                     for dicts in to_join_dict:
                         for key_dict, vals in dicts.items():

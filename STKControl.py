@@ -183,7 +183,7 @@ for rec in scenario_metadata["receivers"]:
 
             reporte = pd.DataFrame(tabla)
             reporte_len = len(reporte['Access Number'])
-            reporte['Modulation'] = [dem] * reporte_len
+            #reporte['Modulation'] = [dem] * reporte_len
             reporte.to_excel("Reports/" + report_name+".xlsx")
             reporte.to_csv("Reports/" + report_name+".csv")
         
