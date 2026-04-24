@@ -5,6 +5,7 @@ from win32api import GetSystemMetrics
 from comtypes.client import CreateObject
 import pandas as pd
 import json
+import numpy as np
 from numpy import sqrt, power
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -23,7 +24,12 @@ class StkEnv(gym.Env):
     
     def __init__(self, scenario_file_path = "Scenarios/Spy_Sat_noantennareceptor.json"):
         
+        #A vector of 2 continous values between -1.0 and 1.0
         self.action_space = spaces.Box(-1, 1, (2,))
+
+        #A vector o 7 continous values each with its own defined bound
+        self.observation_space = spaces.Box(low=np.array([0, 0, 0, 0, -10000, -10000, -10000]), high=np.array([360, 90, 500, 5000, 10000, 10000, 10000]), shape=(7,), dtype=np.float32)
+
 
         self.scenario_file_path = scenario_file_path
         self.b_b = 0.005
@@ -240,7 +246,7 @@ class StkEnv(gym.Env):
         to_join_dict_1 = (AER_data, LinkInfo_data, PositionVelocity)
         to_join_dict_2 = (AER_data_2, LinkInfo_data_2, PositionVelocity_2)
         
-        obs_space = ['Azimuth', 'Elevation', 'C/No', 'Range', 'x', 'y', 'z']             
+        obs_space = ['Azimuth', 'Elevation', 'C/No', 'Range', 'x', 'y', 'z']
         
         for dicts in to_join_dict_1:
             for key, vals in dicts.items():
